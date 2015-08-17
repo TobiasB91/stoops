@@ -72,6 +72,8 @@ import oopsc.statements.WriteStatement;
  *                | NEW identifier
  *                | '(' expression ')'
  *                | varorcall
+ *                | TRUE 
+ *                | FALSE
  * 
  * varorcall    ::= identifier
  * </pre>
@@ -406,6 +408,14 @@ public class SyntaxAnalysis {
                     lexer.getSymbol().getPosition());
             lexer.nextSymbol();
             break;
+        case TRUE:
+        	e = new LiteralExpression(1, ClassDeclaration.BOOL_TYPE, lexer.getSymbol().getPosition());
+        	lexer.nextSymbol();
+        	break;
+        case FALSE:
+        	e = new LiteralExpression(0, ClassDeclaration.BOOL_TYPE, lexer.getSymbol().getPosition());
+        	lexer.nextSymbol();
+        	break;
         case NULL:
             e = new LiteralExpression(0, ClassDeclaration.NULL_TYPE, lexer.getSymbol().getPosition());
             lexer.nextSymbol();

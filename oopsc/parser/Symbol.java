@@ -7,7 +7,7 @@ package oopsc.parser;
 public class Symbol {
     /** Alle definierten Symbole. */
     public enum Id {
-        IDENT, NUMBER,
+        IDENT, NUMBER, TRUE, FALSE,
         BEGIN, END,
         CLASS, IS, METHOD,
         READ, WRITE,
