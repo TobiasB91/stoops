@@ -1,0 +1,69 @@
+#! /bin/bash
+
+usage()
+{
+    echo "Nutzung: regtest {optionen} <oops-dateien>"
+    echo "  Optionen:"
+    echo "    -c <oopsc-jar>  Eine bestimmte Version des OOPS-Compilers nutzen"
+    echo "    -o              Erzeuge .out-Datei statt sie zu vergleichen"
+    echo "    -h              Zeige diese Hilfe"
+    exit 1
+}
+
+export scriptPath=$(echo $0 | sed "s|^\.\./|`pwd`/../|" | sed "s|^\./|`pwd`/|")
+export baseDir=$(dirname "${scriptPath}")
+
+oopsc=OOPSC.jar
+ext=compare
+
+while true; do
+    case $1 in
+        "")
+            echo "Keine Dateien angegeben"
+            usage
+            ;;
+        "-c")
+            shift
+            oopsc=$1
+            ;;
+        "-o")
+            ext=out
+            ;;
+        "-h")
+            usage
+            ;;
+        -*)
+            echo "Unbekannter Parameter: $1"
+            usage
+            ;;
+        *)
+            break
+            ;;
+    esac
+    shift
+done
+
+for i in $*; do
+    name=$(basename $i .oops)
+    if [ $ext == compare ]; then
+        echo -n "Testing $i ... "
+    else
+        echo "Generating $name.out ... "
+    fi
+    java -ea -Dfile.encoding=UTF-8 -jar "$baseDir/$oopsc" $i $name.asm >$name.$ext
+    if [ $? = 0 ]; then
+        echo abc | java -Dfile.encoding=UTF-8 -jar "$baseDir/OOPSVM.jar" $name.asm >$name.$ext
+        echo xyz | java -Dfile.encoding=UTF-8 -jar "$baseDir/OOPSVM.jar" $name.asm >>$name.$ext
+    fi
+    if [ $ext == compare ]; then
+        diff $name.out $name.compare >/dev/null
+        if [ $? = 0 ]; then
+          echo "Ok"
+          rm -f $name.asm $name.compare
+        else
+          echo " Failed (Check $name.out/.compare)"
+       fi
+    else
+        rm -f $name.asm
+    fi
+done

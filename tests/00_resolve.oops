@@ -1,0 +1,18 @@
+| Programm muss ABA ausgeben
+CLASS Main IS
+    METHOD main IS 
+        x, y : Integer;
+    BEGIN
+        x := 65;
+        WRITE x;
+        helper;
+        WRITE x;
+    END METHOD
+    
+    METHOD helper IS
+        x, y : Main;
+    BEGIN
+        x := SELF;
+        WRITE 66;
+    END METHOD
+END CLASS
