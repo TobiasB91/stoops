@@ -266,36 +266,27 @@ public class SyntaxAnalysis {
             statements.add(new WriteStatement(expression()));
             expectSymbol(Symbol.Id.SEMICOLON);
             break;
-        case IF:
-            {	
-            	lexer.nextSymbol();
-	            Expression ifCondition = relation();
-	            expectSymbol(Symbol.Id.THEN);
-	            LinkedList<Statement> thenStatements = new LinkedList<Statement>();
-	            LinkedList<Statement> elseStatements = new LinkedList<Statement>();
-	            statements(thenStatements);	
-	            if(lexer.getSymbol().getId() == Symbol.Id.ELSE) {
-	            	lexer.nextSymbol();
-	            	statements(elseStatements);
-	            }
-	            expectSymbol(Symbol.Id.END);
-	            expectSymbol(Symbol.Id.IF);
-	            statements.add(new IfStatement(ifCondition, thenStatements, elseStatements));
-            }
-            break;	
         case ELSEIF:
-            lexer.nextSymbol();
-            Expression elseIfCondition = relation();
+        case IF: 
+    		boolean isIf = lexer.getSymbol().getId() == Symbol.Id.IF;
+        	lexer.nextSymbol();
+            Expression ifCondition = relation();
             expectSymbol(Symbol.Id.THEN);
             LinkedList<Statement> thenStatements = new LinkedList<Statement>();
             LinkedList<Statement> elseStatements = new LinkedList<Statement>();
-            statements(thenStatements);
-            if(lexer.getSymbol().getId() == Symbol.Id.ELSE) {
+            statements(thenStatements);	
+            if(lexer.getSymbol().getId() == Symbol.Id.ELSEIF) {
+            	statement(elseStatements);
+            } else if(lexer.getSymbol().getId() == Symbol.Id.ELSE) {
             	lexer.nextSymbol();
             	statements(elseStatements);
+            } 
+            if(isIf) {
+            	expectSymbol(Symbol.Id.END);
+            	expectSymbol(Symbol.Id.IF);
             }
-            
-            break;
+            statements.add(new IfStatement(ifCondition, thenStatements, elseStatements));
+            break;	
         case WHILE:
             lexer.nextSymbol();
             Expression whileCondition = relation();
