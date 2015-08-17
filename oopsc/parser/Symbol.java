@@ -11,7 +11,7 @@ public class Symbol {
         BEGIN, END,
         CLASS, IS, METHOD,
         READ, WRITE,
-        IF, THEN,
+        IF, THEN, ELSE, ELSEIF,
         WHILE, DO,
         COLON, SEMICOLON, COMMA, PERIOD,
         LPAREN, RPAREN,

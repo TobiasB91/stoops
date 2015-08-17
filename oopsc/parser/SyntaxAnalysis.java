@@ -48,6 +48,8 @@ import oopsc.statements.WriteStatement;
  *                | WRITE expression ';'
  *                | IF relation 
  *                  THEN statements 
+ *                  {ELSEIF relation THEN statements }
+ *                  [ELSE statements]
  *                  END IF
  *                | WHILE relation 
  *                  DO statements 
@@ -240,7 +242,7 @@ public class SyntaxAnalysis {
      * @throws IOException Ein Lesefehler ist aufgetreten.
      */
     private void statements(LinkedList<Statement> statements) throws CompileException, IOException {
-        while (lexer.getSymbol().getId() != Symbol.Id.END) {
+        while (lexer.getSymbol().getId() != Symbol.Id.END && lexer.getSymbol().getId() != Symbol.Id.ELSE && lexer.getSymbol().getId() != Symbol.Id.ELSEIF ) {
             statement(statements);
         }
     }
@@ -265,14 +267,34 @@ public class SyntaxAnalysis {
             expectSymbol(Symbol.Id.SEMICOLON);
             break;
         case IF:
+            {	
+            	lexer.nextSymbol();
+	            Expression ifCondition = relation();
+	            expectSymbol(Symbol.Id.THEN);
+	            LinkedList<Statement> thenStatements = new LinkedList<Statement>();
+	            LinkedList<Statement> elseStatements = new LinkedList<Statement>();
+	            statements(thenStatements);	
+	            if(lexer.getSymbol().getId() == Symbol.Id.ELSE) {
+	            	lexer.nextSymbol();
+	            	statements(elseStatements);
+	            }
+	            expectSymbol(Symbol.Id.END);
+	            expectSymbol(Symbol.Id.IF);
+	            statements.add(new IfStatement(ifCondition, thenStatements, elseStatements));
+            }
+            break;	
+        case ELSEIF:
             lexer.nextSymbol();
-            Expression ifCondition = relation();
+            Expression elseIfCondition = relation();
             expectSymbol(Symbol.Id.THEN);
             LinkedList<Statement> thenStatements = new LinkedList<Statement>();
+            LinkedList<Statement> elseStatements = new LinkedList<Statement>();
             statements(thenStatements);
-            expectSymbol(Symbol.Id.END);
-            expectSymbol(Symbol.Id.IF);
-            statements.add(new IfStatement(ifCondition, thenStatements));
+            if(lexer.getSymbol().getId() == Symbol.Id.ELSE) {
+            	lexer.nextSymbol();
+            	statements(elseStatements);
+            }
+            
             break;
         case WHILE:
             lexer.nextSymbol();

@@ -79,6 +79,8 @@ class LexicalAnalysis {
         keywords.put("WRITE", Symbol.Id.WRITE);
         keywords.put("IF", Symbol.Id.IF);
         keywords.put("THEN", Symbol.Id.THEN);
+        keywords.put("ELSE", Symbol.Id.ELSE);
+        keywords.put("ELSEIF", Symbol.Id.ELSEIF);
         keywords.put("WHILE", Symbol.Id.WHILE);
         keywords.put("DO", Symbol.Id.DO);
         keywords.put("MOD", Symbol.Id.MOD);

@@ -18,14 +18,19 @@ public class IfStatement extends Statement {
     /** Die Anweisungen im THEN-Teil. */
     private final LinkedList<Statement> thenStatements;
 
+    /** Die Anweisungen im ELSE-Teil. */
+    private final LinkedList<Statement> elseStatements;
+    
     /**
      * Konstruktor.
      * @param condition Die Bedingung der IF-Anweisung.
      * @param thenStatements Die Anweisungen im THEN-Teil.
+     * @param elseStatements Die Anweisungen im ELSE-Teil.
      */
-    public IfStatement(Expression condition, LinkedList<Statement> thenStatements) {
+    public IfStatement(Expression condition, LinkedList<Statement> thenStatements, LinkedList<Statement> elseStatements) {
         this.condition = condition;
         this.thenStatements = thenStatements;
+        this.elseStatements = elseStatements;
     }
 
     /**
@@ -40,6 +45,9 @@ public class IfStatement extends Statement {
         condition.getType().check(ClassDeclaration.BOOL_TYPE, condition.getPosition());
         for (Statement s : thenStatements) {
             s.contextAnalysis(declarations);
+        }
+        for (Statement s :  elseStatements) {
+        	s.contextAnalysis(declarations);
         }
     }
     
@@ -59,6 +67,14 @@ public class IfStatement extends Statement {
             }
             tree.unindent();
         }
+        if(!elseStatements.isEmpty()) {
+        	tree.println("ELSE");
+        	tree.indent();
+        	for (Statement s : elseStatements) {
+        		s.print(tree);
+        	}
+        	tree.unindent();
+        }
         tree.unindent();
     }
 
@@ -69,17 +85,24 @@ public class IfStatement extends Statement {
      */
     public void generateCode(CodeStream code) {
         String endLabel = code.nextLabel();
+        String elseLabel = code.nextLabel();
         code.println("; IF");
         condition.generateCode(code);
         code.println("MRM R5, (R2) ; Bedingung vom Stapel nehmen");
         code.println("SUB R2, R1");
         code.println("ISZ R5, R5 ; Wenn 0, dann");
-        code.println("JPC R5, " + endLabel + " ; Sprung zu END IF");
+        code.println("JPC R5, " + elseLabel + " ; Sprung zu ELSE");
         code.println("; THEN");
         for (Statement s : thenStatements) {
             s.generateCode(code);
         }
-        code.println("; END IF");
+        code.println("MRI R0, " + endLabel + " ; Sprung zu END IF");
+        code.println("; ELSE");
+        code.println(elseLabel + ":");
+        for (Statement s : elseStatements) {
+        	s.generateCode(code);
+        }
+        code.println("; END IF"); 
         code.println(endLabel + ":");
     }
 }
