@@ -46,15 +46,20 @@ import oopsc.statements.WriteStatement;
  * 
  * statement    ::= READ memberaccess ';'
  *                | WRITE expression ';'
- *                | IF relation 
+ *                | IF predicate 
  *                  THEN statements 
- *                  {ELSEIF relation THEN statements }
+ *                  {ELSEIF predicate THEN statements }
  *                  [ELSE statements]
  *                  END IF
- *                | WHILE relation 
+ *                | WHILE predicate 
  *                  DO statements 
  *                  END WHILE
  *                | memberaccess [ ':=' expression ] ';'
+ * 
+ * 
+ * predicate ::= conjunction { OR conjunction}
+ * 
+ * conjunction ::= relation { AND relation }
  * 
  * relation     ::= expression [ ( '=' | '#' | '<' | '>' | '<=' | '>=' ) expression ]
  * 
@@ -63,6 +68,7 @@ import oopsc.statements.WriteStatement;
  * term         ::= factor { ( '*' | '/' | MOD ) factor }
  * 
  * factor       ::= '-' factor
+ * 				  | NOT factor
  *                | memberaccess
  * 
  * memberaccess ::= literal { '.' varorcall }
@@ -72,7 +78,7 @@ import oopsc.statements.WriteStatement;
  *                | NULL
  *                | SELF
  *                | NEW identifier
- *                | '(' expression ')'
+ *                | '(' predicate ')'
  *                | varorcall
  *                | TRUE 
  *                | FALSE
@@ -270,7 +276,7 @@ public class SyntaxAnalysis {
         case IF: 
     		boolean isIf = lexer.getSymbol().getId() == Symbol.Id.IF;
         	lexer.nextSymbol();
-            Expression ifCondition = relation();
+            Expression ifCondition = predicate();
             expectSymbol(Symbol.Id.THEN);
             LinkedList<Statement> thenStatements = new LinkedList<Statement>();
             LinkedList<Statement> elseStatements = new LinkedList<Statement>();
@@ -289,7 +295,7 @@ public class SyntaxAnalysis {
             break;	
         case WHILE:
             lexer.nextSymbol();
-            Expression whileCondition = relation();
+            Expression whileCondition = predicate();
             expectSymbol(Symbol.Id.DO);
             LinkedList<Statement> whileStatements = new LinkedList<Statement>();
             statements(whileStatements);
@@ -332,6 +338,42 @@ public class SyntaxAnalysis {
             return e;
         }
     }
+    
+    /**
+     * Die Methode parsiert ein Prädikat entsprechend der oben angegebenen 
+     * Syntax und liefert den Ausdruck zurück.
+     * @return Der Ausdruck.
+     * @throws CompileException Der Quelltext entspricht nicht der Syntax.
+     * @throws IOException Ein Lesefehler ist aufgetreten.
+     */
+    private Expression predicate() throws CompileException, IOException {
+    	Expression e = conjunction();
+    	while (lexer.getSymbol().getId() == Symbol.Id.OR) {
+    		Symbol.Id operator = lexer.getSymbol().getId();
+    		lexer.nextSymbol();
+    		e = new BinaryExpression(e, operator, conjunction());
+    	}
+    	return e;
+    }
+    
+    /**
+     * Die Methode parsiert eine Konjunktion entsprechend der oben angegebenen 
+     * Syntax und liefert den Ausdruck zurück.
+     * @return Der Ausdruck.
+     * @throws CompileException Der Quelltext entspricht nicht der Syntax.
+     * @throws IOException Ein Lesefehler ist aufgetreten.
+     */
+    private Expression conjunction() throws CompileException, IOException {
+    	Expression e = relation();
+    	while (lexer.getSymbol().getId() == Symbol.Id.AND) {
+    		Symbol.Id operator = lexer.getSymbol().getId();
+    		lexer.nextSymbol();
+    		e = new BinaryExpression(e, operator, relation());
+    	}
+    	return e;
+    }
+    
+    
 
     /**
      * Die Methode parsiert einen Ausdruck entsprechend der oben angegebenen
@@ -377,6 +419,7 @@ public class SyntaxAnalysis {
      */
     private Expression factor() throws CompileException, IOException {
         switch (lexer.getSymbol().getId()) {
+        case NOT:
         case MINUS:
             Symbol.Id operator = lexer.getSymbol().getId();
             Position position = lexer.getSymbol().getPosition();
@@ -444,7 +487,7 @@ public class SyntaxAnalysis {
             break;
         case LPAREN:
             lexer.nextSymbol();
-            e = expression();
+            e = predicate();
             expectSymbol(Symbol.Id.RPAREN);
             break;
         case IDENT:

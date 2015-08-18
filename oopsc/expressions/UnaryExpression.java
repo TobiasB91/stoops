@@ -44,6 +44,9 @@ public class UnaryExpression extends Expression {
         case MINUS:
             operand.getType().check(ClassDeclaration.INT_TYPE, operand.getPosition());
             break;
+        case NOT:
+            operand.getType().check(ClassDeclaration.BOOL_TYPE, operand.getPosition());
+            break;
         default:
             assert false;
         }
@@ -78,6 +81,10 @@ public class UnaryExpression extends Expression {
             code.println("SUB R6, R5");
             code.println("MMR (R2), R6");
             break;
+        case NOT:
+        	code.println("XOR R5, R1"); //negiere mit XOR und speichere in R5
+        	code.println("MMR (R2), R5"); 
+        	break;
         default:
             assert false;
         }

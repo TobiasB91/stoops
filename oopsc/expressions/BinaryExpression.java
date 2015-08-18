@@ -44,6 +44,14 @@ public class BinaryExpression extends Expression {
         leftOperand = leftOperand.contextAnalysis(declarations);
         rightOperand = rightOperand.contextAnalysis(declarations);
         switch (operator) {
+        case AND: 
+        case OR:
+        	leftOperand = leftOperand.unBox();
+            rightOperand = rightOperand.unBox();
+            leftOperand.getType().check(ClassDeclaration.BOOL_TYPE, leftOperand.getPosition());
+            rightOperand.getType().check(ClassDeclaration.BOOL_TYPE, rightOperand.getPosition());
+            setType(ClassDeclaration.BOOL_TYPE);
+            break;
         case PLUS:
         case MINUS:
         case TIMES:
@@ -162,6 +170,12 @@ public class BinaryExpression extends Expression {
             code.println("ISZ R6, R6");
             code.println("XOR R6, R1");
             break;
+        case OR:
+        	code.println("OR R6, R5");
+        	break;
+        case AND:
+        	code.println("AND R6, R5");
+        	break;
         default:
             assert false;
         }

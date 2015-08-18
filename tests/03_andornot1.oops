@@ -1,0 +1,49 @@
+| abc -> DFGHIK
+| xyz -> DFGHI
+CLASS Main IS
+    METHOD main IS
+        a, b, c : Integer;
+    BEGIN
+        IF FALSE AND FALSE THEN
+            WRITE 'A';
+        END IF
+        IF TRUE AND FALSE THEN
+            WRITE 'B';
+        END IF
+        IF FALSE AND TRUE THEN
+            WRITE 'C';
+        END IF
+        IF TRUE AND TRUE THEN
+            WRITE 'D';
+        END IF
+        IF FALSE OR FALSE THEN
+            WRITE 'E';
+        END IF
+        IF TRUE OR FALSE THEN
+            WRITE 'F';
+        END IF
+        IF FALSE OR TRUE THEN
+            WRITE 'G';
+        END IF
+        IF TRUE OR TRUE THEN
+            WRITE 'H';
+        END IF
+        IF NOT FALSE THEN
+            WRITE 'I';
+        END IF
+        IF NOT TRUE THEN
+            WRITE 'J';
+        END IF
+        READ a;
+        READ b;
+        READ c;
+        IF NOT(a < b AND b < c)
+                AND (a < b) # (b < 'd')
+                OR 'c' > a 
+        THEN
+            IF (5 > 7) # (1 < 2 OR 5 > 7) THEN
+                WRITE 'K';
+            END IF
+        END IF
+    END METHOD
+END CLASS
