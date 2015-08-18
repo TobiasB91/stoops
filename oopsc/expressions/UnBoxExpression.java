@@ -25,6 +25,8 @@ public class UnBoxExpression extends Expression {
         this.operand = operand;
         if (operand.getType().isA(ClassDeclaration.INT_CLASS)) {
             setType(ClassDeclaration.INT_TYPE);
+        } else if(operand.getType().isA(ClassDeclaration.BOOL_CLASS)) {
+        	setType(ClassDeclaration.BOOL_TYPE);
         } else {
             assert false;
         }

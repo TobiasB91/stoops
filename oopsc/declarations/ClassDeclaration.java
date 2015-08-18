@@ -32,10 +32,14 @@ public class ClassDeclaration extends Declaration {
 
     /** Die Klasse Integer. */
     public static final ClassDeclaration INT_CLASS = new ClassDeclaration(new Identifier("Integer", null));
+    
+    /** Die Klasse Boolean. */
+    public static final ClassDeclaration BOOL_CLASS = new ClassDeclaration(new Identifier("Boolean", null));
 
     static {
-        // Integer enthält ein Element
+        // Integer und Boolean enthalten ein Element
         INT_CLASS.objectSize = ClassDeclaration.HEADER_SIZE + 1;
+        BOOL_CLASS.objectSize = ClassDeclaration.HEADER_SIZE + 1;
     }
 
     /** Die Attribute dieser Klasse. */

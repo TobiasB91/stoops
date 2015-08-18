@@ -35,6 +35,9 @@ public class BoxExpression extends Expression {
         if (operand.getType().isA(ClassDeclaration.INT_TYPE)) {
             setType(ClassDeclaration.INT_CLASS);
             newType = new NewExpression(new ResolvableIdentifier("Integer", null), operand.getPosition());
+        } else if(operand.getType().isA(ClassDeclaration.BOOL_TYPE)) {
+        	setType(ClassDeclaration.BOOL_CLASS);
+            newType = new NewExpression(new ResolvableIdentifier("Boolean", null), operand.getPosition());
         } else {
             assert false;
         }

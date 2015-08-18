@@ -46,8 +46,9 @@ public class Program {
         // Neuen Deklarationsraum schaffen
         declarations.enter();
         
-        // Vordefinierte Klasse hinzufügen
+        // Vordefinierte Klassen hinzufügen
         declarations.add(ClassDeclaration.INT_CLASS);
+        declarations.add(ClassDeclaration.BOOL_CLASS);
 
         // Benutzerdefinierte Klasse hinzufügen
         declarations.add(theClass);

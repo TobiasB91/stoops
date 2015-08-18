@@ -107,7 +107,7 @@ public abstract class Expression {
      *         gefunden.
      */
     public Expression box(Declarations declarations) throws CompileException {
-        if (type.isA(ClassDeclaration.INT_TYPE)) {
+        if (type.isA(ClassDeclaration.INT_TYPE) || type.isA(ClassDeclaration.BOOL_TYPE)) {
             return new BoxExpression(this, declarations);
         } else if (isLValue()) {
             return new DeRefExpression(this);
@@ -130,7 +130,7 @@ public abstract class Expression {
     public Expression unBox() {
         if (isLValue()) {
             return new DeRefExpression(this).unBox();
-        } else if (type != ClassDeclaration.NULL_TYPE && type.isA(ClassDeclaration.INT_CLASS)) {
+        } else if (type != ClassDeclaration.NULL_TYPE && (type.isA(ClassDeclaration.INT_CLASS) || type.isA(ClassDeclaration.BOOL_CLASS) ) ) {
             return new UnBoxExpression(this);
         } else {
             return this;

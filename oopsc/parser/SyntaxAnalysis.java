@@ -54,7 +54,7 @@ import oopsc.statements.WriteStatement;
  *                | WHILE predicate 
  *                  DO statements 
  *                  END WHILE
- *                | memberaccess [ ':=' expression ] ';'
+ *                | memberaccess [ ':=' predicate ] ';'
  * 
  * 
  * predicate ::= conjunction { OR conjunction}
@@ -307,7 +307,7 @@ public class SyntaxAnalysis {
             Expression e = memberAccess();
             if (lexer.getSymbol().getId() == Symbol.Id.BECOMES) {
                 lexer.nextSymbol();
-                statements.add(new Assignment(e, expression()));
+                statements.add(new Assignment(e, predicate()));
             } else {
                 statements.add(new CallStatement(e));
             }
