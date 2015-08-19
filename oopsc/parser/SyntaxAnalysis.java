@@ -27,7 +27,7 @@ import oopsc.statements.WriteStatement;
  * Die Klasse realisiert die syntaktische Analyse für die folgende Grammatik. 
  * Terminale stehen dabei in Hochkommata oder sind groß geschrieben:
  * <pre>
- * program      ::= classdecl
+ * program      ::= { classdecl }
  *
  * classdecl    ::= CLASS identifier IS
  *                  { memberdecl } 
@@ -147,24 +147,28 @@ public class SyntaxAnalysis {
     }
     
     /**
-     * Die Methode parsiert eine Klassendeklaration entsprechend der oben angegebenen
+     * Die Methode parsiert eine oder mehrere Klassendeklarationen entsprechend der oben angegebenen
      * Syntax und liefert diese zurück.
-     * @return Die Klassendeklaration.
+     * @return Die Klassendeklarationen.
      * @throws CompileException Der Quelltext entspricht nicht der Syntax.
      * @throws IOException Ein Lesefehler ist aufgetreten.
      */
-    private ClassDeclaration classdecl() throws CompileException, IOException {
-        expectSymbol(Symbol.Id.CLASS);
-        Identifier name = expectIdent();
-        expectSymbol(Symbol.Id.IS);
-        LinkedList<VarDeclaration> attributes = new LinkedList<VarDeclaration>();
-        LinkedList<MethodDeclaration> methods = new LinkedList<MethodDeclaration>();
-        while (lexer.getSymbol().getId() != Symbol.Id.END) {
-            memberdecl(attributes, methods);
-        }
-        lexer.nextSymbol();
-        expectSymbol(Symbol.Id.CLASS);
-        return new ClassDeclaration(name, attributes, methods);
+    private LinkedList<ClassDeclaration> classdecl() throws CompileException, IOException {
+        LinkedList<ClassDeclaration> classdecls = new LinkedList<ClassDeclaration>();
+    	while (lexer.getSymbol().getId() == Symbol.Id.CLASS) {
+    		lexer.nextSymbol();
+	        Identifier name = expectIdent();
+	        expectSymbol(Symbol.Id.IS);
+	        LinkedList<VarDeclaration> attributes = new LinkedList<VarDeclaration>();
+	        LinkedList<MethodDeclaration> methods = new LinkedList<MethodDeclaration>();
+	        while (lexer.getSymbol().getId() != Symbol.Id.END) {
+	            memberdecl(attributes, methods);
+	        }
+	        lexer.nextSymbol();
+	        expectSymbol(Symbol.Id.CLASS);
+	        classdecls.add(new ClassDeclaration(name, attributes, methods));
+    	}
+        return classdecls;
     }
     
     /**

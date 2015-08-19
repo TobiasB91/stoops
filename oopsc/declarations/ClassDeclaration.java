@@ -1,9 +1,11 @@
 package oopsc.declarations;
 
 import java.util.LinkedList;
+
 import oopsc.CompileException;
 import oopsc.parser.Identifier;
 import oopsc.parser.Position;
+import oopsc.parser.ResolvableIdentifier;
 import oopsc.streams.CodeStream;
 import oopsc.streams.TreeStream;
 
@@ -38,8 +40,8 @@ public class ClassDeclaration extends Declaration {
 
     static {
         // Integer und Boolean enthalten ein Element
-        INT_CLASS.objectSize = ClassDeclaration.HEADER_SIZE + 1;
-        BOOL_CLASS.objectSize = ClassDeclaration.HEADER_SIZE + 1;
+    	INT_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Integer", null), true));
+    	BOOL_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Boolean", null), true));
     }
 
     /** Die Attribute dieser Klasse. */
@@ -100,9 +102,9 @@ public class ClassDeclaration extends Declaration {
      *         gefunden.
      */
     public void contextAnalysis(Declarations declarations) throws CompileException {
-        // Neuen Deklarationsraum schaffen
+    	 // Neuen Deklarationsraum schaffen
         declarations.enter();
-        
+    	
         // Attribute eintragen
         for (VarDeclaration a : attributes) {
             declarations.add(a);
@@ -116,26 +118,42 @@ public class ClassDeclaration extends Declaration {
         // Wird auf ein Objekt dieser Klasse zugegriffen, werden die Deklarationen
         // in diesem Zustand benötigt. Deshalb werden sie in der Klasse gespeichert.
         this.declarations = (Declarations) declarations.clone();
+        
+        // Deklarationsraum verlassen
+        declarations.leave();
+    }
+    
+    
+    /**
+     * Die Methode resolvt die Typen der Klassendeklaration.
+     * @throws CompileException Während der Kontextanylyse wurde ein Fehler
+     *         gefunden.
+     */
+    public void resolve() throws CompileException {
+    	
+    	// Neuen Deklarationsraum schaffen
+        declarations.enter();
 
+        
         // Standardgröße für Objekte festlegen
         objectSize = HEADER_SIZE;
         
-        // Attributtypen auflösen und Indizes innerhalb des Objekts vergeben
+    	// Attributtypen auflösen und Indizes innerhalb des Objekts vergeben
         for (VarDeclaration a : attributes) {
-            a.contextAnalysis(declarations);
+            a.contextAnalysis(this.declarations);
             a.setOffset(objectSize++);
         }
         
         // Kontextanalyse für Methoden durchführen
         for (MethodDeclaration m : methods) {
             m.setSelfType(this);
-            m.contextAnalysis(declarations);
+            m.contextAnalysis(this.declarations);
         }
         
         // Deklarationsraum verlassen
         declarations.leave();
     }
-    
+     
     /**
      * Die Methode prüft, ob dieser Typ kompatibel mit einem anderen Typ ist.
      * @param expected Der Typ, mit dem verglichen wird.

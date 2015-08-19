@@ -1,5 +1,7 @@
 package oopsc;
 
+import java.util.LinkedList;
+
 import oopsc.declarations.ClassDeclaration;
 import oopsc.declarations.Declarations;
 import oopsc.expressions.AccessExpression;
@@ -16,8 +18,8 @@ import oopsc.streams.TreeStream;
  * Synthese.
  */
 public class Program {
-    /** Die benutzerdefinierte Klasse. */
-    private ClassDeclaration theClass;
+    /** Die benutzerdefinierten Klassen. */
+    private LinkedList<ClassDeclaration> classes;
    
     /**
      * Eine Ausdruck, der ein Objekt der Klasse Main erzeugt und dann darin die
@@ -31,8 +33,10 @@ public class Program {
      * Konstruktor.
      * @param theClass Die benutzerdefinierte Klasse.
      */
-    public Program(ClassDeclaration theClass) {
-        this.theClass = theClass;
+    public Program(LinkedList<ClassDeclaration> classes) {
+    	classes.add(ClassDeclaration.INT_CLASS);
+    	classes.add(ClassDeclaration.BOOL_CLASS);
+        this.classes = classes;
     }
     
     /**
@@ -45,22 +49,30 @@ public class Program {
         
         // Neuen Deklarationsraum schaffen
         declarations.enter();
+               
         
-        // Vordefinierte Klassen hinzufügen
-        declarations.add(ClassDeclaration.INT_CLASS);
-        declarations.add(ClassDeclaration.BOOL_CLASS);
-
-        // Benutzerdefinierte Klasse hinzufügen
-        declarations.add(theClass);
+        // Benutzerdefinierte Klassen hinzufügen
+        for(ClassDeclaration cls : classes) {
+        	declarations.add(cls);
+        }
         
-        // Kontextanalyse für die Methoden der Klasse durchführen
-        theClass.contextAnalysis(declarations);
+        // Kontextanalyse für die Klassen durchführen
+        for(ClassDeclaration cls : classes) {
+        	cls.contextAnalysis(declarations);
+        }
+        
+        //Kontextanalyse für die Methoden der Klassen durchführen
+        for(ClassDeclaration cls : classes) {
+        	cls.resolve();
+        }
 
+        
         // Abhängigkeiten für Startup-Code auflösen
         main = main.contextAnalysis(declarations);
-
+        
         // Deklarationsraum verlassen
         declarations.leave();
+        
     }
     
     /**
@@ -68,7 +80,9 @@ public class Program {
      */
     void printTree() {
         TreeStream tree = new TreeStream(System.out, 4);
-        theClass.print(tree);
+        for(ClassDeclaration cls : classes) {
+        	cls.print(tree);
+        }
     }
     
     /**
@@ -87,8 +101,10 @@ public class Program {
         main.generateCode(code);
         code.println("MRI R0, _end ; Programm beenden");
         
-        // Generiere Code für benutzerdefinierte Klasse
-        theClass.generateCode(code);
+        // Generiere Code für benutzerdefinierte Klassen
+        for(ClassDeclaration cls : classes) {
+        	cls.generateCode(code);
+        }
         
         // Speicher für Stapel und Heap reservieren
         code.println("_stack: ; Hier fängt der Stapel an");
