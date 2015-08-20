@@ -22,6 +22,9 @@ public class MethodDeclaration extends Declaration {
     /** Die Anweisungen der Methode, d.h. der Methodenrumpf. */
     private final LinkedList<Statement> statements;
     
+    /** Die Parameter der Methode */
+    private final LinkedList<VarDeclaration> params;
+    
     /** Die Quelltextposition des Methodenendes. */
     private final Position endPosition;
     
@@ -32,12 +35,13 @@ public class MethodDeclaration extends Declaration {
      * @param statements Die Anweisungen der Methode, d.h. der Methodenrumpf.
      * @param endPosition Die Quelltextposition des Methodenendes.
      */
-    public MethodDeclaration(Identifier name, LinkedList<VarDeclaration> vars, LinkedList<Statement> statements,
+    public MethodDeclaration(Identifier name, LinkedList<VarDeclaration> params, LinkedList<VarDeclaration> vars, LinkedList<Statement> statements,
             Position endPosition) {
         super(name);
         this.vars = vars;
         this.statements = statements;
         this.endPosition = endPosition;
+        this.params = params;
     }
 
     /**
@@ -70,18 +74,30 @@ public class MethodDeclaration extends Declaration {
      *         gefunden.
      */
     void contextAnalysis(Declarations declarations) throws CompileException {
-        // Neuen Deklarationsraum schaffen
+    	
+    	// Neuen Deklarationsraum schaffen
         declarations.enter();
         
         // SELF eintragen
         assert self != null;
         declarations.add(self);
  
+        int offset = -(params.size()+2);
+        
         // SELF liegt vor der Rücksprungadresse auf dem Stapel
-        self.setOffset(-2);
+        self.setOffset(offset);
+ 
+        for (VarDeclaration p : params) {
+        	declarations.add(p);
+        	p.setOffset(++offset);
+        }
+        
+        for (VarDeclaration p : params) {
+        	p.contextAnalysis(declarations);
+        }
         
         // Rücksprungadresse und alten Rahmenzeiger überspringen
-        int offset = 1;
+        offset = 1;
         
         // Lokale Variablen eintragen
         for (VarDeclaration v : vars) {
@@ -109,6 +125,15 @@ public class MethodDeclaration extends Declaration {
      */
     void print(TreeStream tree) {
         tree.println("METHOD " + getIdentifier().getName());
+        tree.indent();
+        if (!params.isEmpty()) {
+            tree.println("PARAMS");
+            tree.indent();
+            for (VarDeclaration p : params) {
+                p.print(tree);
+            }
+            tree.unindent();
+        }
         tree.indent();
         if (!vars.isEmpty()) {
             tree.println("VARIABLES");
@@ -159,4 +184,12 @@ public class MethodDeclaration extends Declaration {
         code.println("MRM R3, (R3) ; Alten Stapelrahmen holen");
         code.println("MRR R0, R5 ; Rücksprung");
     }
+
+    /**
+     * Getter für die Parameter.
+     * @return Die Parameter
+     */
+	public LinkedList<VarDeclaration> getParams() {
+		return params;
+	}
 }

@@ -34,7 +34,8 @@ import oopsc.statements.WriteStatement;
  *                  END CLASS
  *
  * memberdecl   ::= vardecl ';'
- *                | METHOD identifier IS methodbody
+ *                | METHOD identifier [ '(' vardecl { ';' vardecl } ')' ]
+ *                 IS methodbody
  * 
  * vardecl      ::= identifier { ',' identifier } ':' identifier
  * 
@@ -83,7 +84,7 @@ import oopsc.statements.WriteStatement;
  *                | TRUE 
  *                | FALSE
  * 
- * varorcall    ::= identifier
+ * varorcall    ::= identifier [ '(' predicate { ',' predicate } ')' ]
  * </pre>
  * Daraus wird der Syntaxbaum aufgebaut, dessen Wurzel die Klasse
  * {@link Program Program} ist.
@@ -185,12 +186,24 @@ public class SyntaxAnalysis {
             throws CompileException, IOException {
         if (lexer.getSymbol().getId() == Symbol.Id.METHOD) {
             lexer.nextSymbol();
+            LinkedList<VarDeclaration> params = new LinkedList<VarDeclaration>();
             Identifier name = expectIdent();
+            
+            if (lexer.getSymbol().getId() ==  Symbol.Id.LPAREN) {
+            	lexer.nextSymbol();
+            	vardecl(params, false);
+            	while (lexer.getSymbol().getId() == Symbol.Id.SEMICOLON) {
+            		lexer.nextSymbol();
+            		vardecl(params, false);
+            	}
+            	expectSymbol(Symbol.Id.RPAREN);
+            }
+            		
             expectSymbol(Symbol.Id.IS);
             LinkedList<VarDeclaration> vars = new LinkedList<VarDeclaration>();
             LinkedList<Statement> statements = new LinkedList<Statement>();
             Position end = methodbody(vars, statements);
-            methods.add(new MethodDeclaration(name, vars, statements, end));
+            methods.add(new MethodDeclaration(name, params, vars, statements, end));
         } else {
             vardecl(attributes, true);
             expectSymbol(Symbol.Id.SEMICOLON);
@@ -446,7 +459,7 @@ public class SyntaxAnalysis {
         Expression e = literal();
         while (lexer.getSymbol().getId() == Symbol.Id.PERIOD) {
             lexer.nextSymbol();
-            e = new AccessExpression(e, new VarOrCall(expectResolvableIdent()));
+            e = new AccessExpression(e, (VarOrCall) varorcall());
         }
         return e;
     }
@@ -481,7 +494,7 @@ public class SyntaxAnalysis {
             lexer.nextSymbol();
             break;
         case SELF:
-            e = new VarOrCall(new ResolvableIdentifier("_self", lexer.getSymbol().getPosition()));
+            e = new VarOrCall(new ResolvableIdentifier("_self", lexer.getSymbol().getPosition()), new LinkedList<Expression>());
             lexer.nextSymbol();
             break;
         case NEW:
@@ -495,12 +508,35 @@ public class SyntaxAnalysis {
             expectSymbol(Symbol.Id.RPAREN);
             break;
         case IDENT:
-            e = new VarOrCall(expectResolvableIdent());
+            e = varorcall();
             break;
         default:
             unexpectedSymbol();
         }
         return e;
+    }
+    
+    /**
+     * Die Methode parsiert eine Variable oder einen Methodenaufruf
+     * entsprechend der oben angegebenen 
+     * Syntax und liefert den Ausdruck zurück.
+     * @return Der Ausdruck.
+     * @throws CompileException Der Quelltext entspricht nicht der Syntax.
+     * @throws IOException Ein Lesefehler ist aufgetreten.
+     */
+    private Expression varorcall() throws CompileException, IOException {
+    	ResolvableIdentifier ident = expectResolvableIdent();
+    	LinkedList<Expression> args = new LinkedList<Expression>();
+        if (lexer.getSymbol().getId() ==  Symbol.Id.LPAREN) {
+        	lexer.nextSymbol();
+        	args.add(predicate());
+        	while (lexer.getSymbol().getId() == Symbol.Id.COMMA) {
+        		lexer.nextSymbol();
+        		args.add(predicate());
+        	}
+        	expectSymbol(Symbol.Id.RPAREN);
+        }
+        return new VarOrCall(ident, args);
     }
 
     /**

@@ -27,7 +27,7 @@ public class Program {
      */
     private Expression main = new AccessExpression(
             new NewExpression(new ResolvableIdentifier("Main", null), null),
-            new VarOrCall(new ResolvableIdentifier("main", null)));
+            new VarOrCall(new ResolvableIdentifier("main", null), new LinkedList<Expression>()));
     
     /**
      * Konstruktor.

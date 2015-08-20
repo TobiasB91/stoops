@@ -1,5 +1,7 @@
 package oopsc.expressions;
 
+import java.util.LinkedList;
+
 import oopsc.CompileException;
 import oopsc.declarations.ClassDeclaration;
 import oopsc.declarations.Declarations;
@@ -16,14 +18,18 @@ import oopsc.streams.TreeStream;
 public class VarOrCall extends Expression {
     /** Der Name des Attributs, der Variablen oder der Methode. */
     private final ResolvableIdentifier identifier;
+
+    /** Die Argumente der Methode; ansonsten leer. */
+    private final LinkedList<Expression> args;
     
     /**
      * Konstruktor.
      * @param identifier Der Name des Attributs, der Variablen oder der Methode.
      */
-    public VarOrCall(ResolvableIdentifier identifier) {
+    public VarOrCall(ResolvableIdentifier identifier, LinkedList<Expression> args) {
         super(identifier.getPosition());
         this.identifier = identifier;
+        this.args = args;
     }
 
     /**
@@ -67,9 +73,29 @@ public class VarOrCall extends Expression {
      */
     Expression contextAnalysis(Declarations declarations, boolean addSelf) throws CompileException {
         declarations.resolveVarOrMethod(identifier);
+
+        if (identifier.getDeclaration() instanceof MethodDeclaration) {
+        	
+        	if (args.size() != ((MethodDeclaration)identifier.getDeclaration()).getParams().size()) {
+        		throw new CompileException("Die Anzahl der Argumente unterscheidet sich von der erwarteten Anzahl.", getPosition());
+        	}
+        	for (int i = 0; i < args.size(); ++i) {
+        		declarations.resolveType(((MethodDeclaration) identifier.getDeclaration()).getParams().get(i).getType());
+        		ClassDeclaration class1 = args.get(i).box(declarations).getType();
+        		ClassDeclaration class2 = ((ClassDeclaration)((MethodDeclaration) identifier.getDeclaration())
+						.getParams().get(i).getType().getDeclaration());
+        		
+        		if (!class1.isA(class2)) {
+        			throw new CompileException("Wert des Parameters " + (i+1) + " kann nicht zu dessen Typen umgewandelt werden: ",
+        					args.get(i).getPosition());
+        		}
+        	}
+        }
+        
+        
         if (addSelf && (identifier.getDeclaration() instanceof MethodDeclaration || 
                 identifier.getDeclaration() instanceof VarDeclaration && ((VarDeclaration) identifier.getDeclaration()).isAttribute())) {
-            return new AccessExpression(new VarOrCall(new ResolvableIdentifier("_self", getPosition())), this)
+            return new AccessExpression(new VarOrCall(new ResolvableIdentifier("_self", getPosition()), new LinkedList<Expression>()), this)
                     .contextAnalysis(declarations);
         } else if (identifier.getDeclaration() instanceof VarDeclaration) {
             setType((ClassDeclaration) ((VarDeclaration) identifier.getDeclaration()).getType().getDeclaration());
@@ -89,6 +115,14 @@ public class VarOrCall extends Expression {
     public void print(TreeStream tree) {
         tree.println(identifier.getName() + (getType() == null ? "" : " : " + 
                 (isLValue() ? "REF " : "") + getType().getIdentifier().getName()));
+        if (!args.isEmpty()) {
+            tree.println("ARGS");
+            tree.indent();
+            for (Expression a : args) {
+                a.print(tree);
+            }
+            tree.unindent();
+        }
     }
 
     /**
