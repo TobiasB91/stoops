@@ -68,6 +68,17 @@ public class MethodDeclaration extends Declaration {
     }
     
     /**
+     * Führt die Kontextanalyse für die Parameter der Methode aus.
+     * @param declarations Die an dieser Stelle gültigen Deklarationen.
+     * @throws CompileException Ein Fehler trat während der Kontextanalyse auf.
+     */
+    public void contextAnalysisForParams(Declarations declarations) throws CompileException {
+    	for (VarDeclaration p : params) {
+    		p.contextAnalysis(declarations);
+    	}
+    }
+    
+    /**
      * Führt die Kontextanalyse für diese Methoden-Deklaration durch.
      * @param declarations Die an dieser Stelle gültigen Deklarationen.
      * @throws CompileException Während der Kontextanylyse wurde ein Fehler
@@ -90,10 +101,6 @@ public class MethodDeclaration extends Declaration {
         for (VarDeclaration p : params) {
         	declarations.add(p);
         	p.setOffset(++offset);
-        }
-        
-        for (VarDeclaration p : params) {
-        	p.contextAnalysis(declarations);
         }
         
         // Rücksprungadresse und alten Rahmenzeiger überspringen
@@ -152,6 +159,7 @@ public class MethodDeclaration extends Declaration {
             tree.unindent();
         }
         tree.unindent();
+        tree.unindent();
     }
 
     /**
@@ -176,7 +184,7 @@ public class MethodDeclaration extends Declaration {
         }
         code.println(endPosition);
         code.println("; END METHOD " + getIdentifier().getName());
-        code.println("MRI R5, " + (vars.size() + 3));
+        code.println("MRI R5, " + (vars.size() + 3 + params.size()));
         code.println("SUB R2, R5 ; Stack korrigieren");
         code.println("SUB R3, R1");
         code.println("MRM R5, (R3) ; Rücksprungadresse holen");

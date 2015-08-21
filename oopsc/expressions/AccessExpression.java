@@ -51,7 +51,7 @@ public class AccessExpression extends Expression {
 
         // Der rechte Operand hat einen Deklarationsraum, der sich aus dem 
         // Ergebnistyp des linken Operanden ergibt.
-        rightOperand.contextAnalysis(leftOperand.getType().getDeclarations(), false);
+        rightOperand.contextAnalysis(leftOperand.getType().getDeclarations(), declarations, false);
 
         // Der Typ dieses Ausdrucks ist immer der des rechten Operanden.
         setType(rightOperand.getType());

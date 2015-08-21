@@ -113,6 +113,7 @@ public class ClassDeclaration extends Declaration {
         // Methoden eintragen
         for (MethodDeclaration m : methods) {
             declarations.add(m);
+            m.contextAnalysisForParams(declarations);
         }
         
         // Wird auf ein Objekt dieser Klasse zugegriffen, werden die Deklarationen
@@ -132,26 +133,27 @@ public class ClassDeclaration extends Declaration {
     public void resolve() throws CompileException {
     	
     	// Neuen Deklarationsraum schaffen
-        declarations.enter();
-
+       // declarations.enter();
         
         // Standardgröße für Objekte festlegen
         objectSize = HEADER_SIZE;
         
+        Declarations declarations = (Declarations) this.declarations.clone();
+        
     	// Attributtypen auflösen und Indizes innerhalb des Objekts vergeben
         for (VarDeclaration a : attributes) {
-            a.contextAnalysis(this.declarations);
+            a.contextAnalysis(declarations);
             a.setOffset(objectSize++);
         }
         
         // Kontextanalyse für Methoden durchführen
         for (MethodDeclaration m : methods) {
             m.setSelfType(this);
-            m.contextAnalysis(this.declarations);
+            m.contextAnalysis(declarations);
         }
         
         // Deklarationsraum verlassen
-        declarations.leave();
+        //declarations.leave();
     }
      
     /**

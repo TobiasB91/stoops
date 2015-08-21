@@ -53,7 +53,7 @@ public class VarOrCall extends Expression {
      *         gefunden.
      */
     public Expression contextAnalysis(Declarations declarations) throws CompileException {
-        return contextAnalysis(declarations, true);
+        return contextAnalysis(declarations, declarations, true);
     }
 
     /**
@@ -71,22 +71,26 @@ public class VarOrCall extends Expression {
      * @throws CompileException Während der Kontextanylyse wurde ein Fehler
      *         gefunden.
      */
-    Expression contextAnalysis(Declarations declarations, boolean addSelf) throws CompileException {
-        declarations.resolveVarOrMethod(identifier);
+    Expression contextAnalysis(Declarations methodClassScope, Declarations declarations,  boolean addSelf) throws CompileException {
+        methodClassScope.resolveVarOrMethod(identifier);
+        for(Expression arg : args) {
+        	arg.contextAnalysis(declarations);
+        }
 
         if (identifier.getDeclaration() instanceof MethodDeclaration) {
         	
         	if (args.size() != ((MethodDeclaration)identifier.getDeclaration()).getParams().size()) {
-        		throw new CompileException("Die Anzahl der Argumente unterscheidet sich von der erwarteten Anzahl.", getPosition());
+        		throw new CompileException("Falsche Anzahl von Parametern", getPosition());
         	}
         	for (int i = 0; i < args.size(); ++i) {
-        		declarations.resolveType(((MethodDeclaration) identifier.getDeclaration()).getParams().get(i).getType());
-        		ClassDeclaration class1 = args.get(i).box(declarations).getType();
-        		ClassDeclaration class2 = ((ClassDeclaration)((MethodDeclaration) identifier.getDeclaration())
+        		//declarations.resolveType(((MethodDeclaration) identifier.getDeclaration()).getParams().get(i).getType());
+        		args.set(i, args.get(i).box(declarations));
+        		ClassDeclaration argClass = args.get(i).getType();
+        		ClassDeclaration paramClass = ((ClassDeclaration)((MethodDeclaration) identifier.getDeclaration())
 						.getParams().get(i).getType().getDeclaration());
         		
-        		if (!class1.isA(class2)) {
-        			throw new CompileException("Wert des Parameters " + (i+1) + " kann nicht zu dessen Typen umgewandelt werden: ",
+        		if (!argClass.isA(paramClass)) {
+        			throw new CompileException("Ausdruck vom Typ "+paramClass.getIdentifier().getName()+" erwartet",
         					args.get(i).getPosition());
         		}
         	}
@@ -149,6 +153,9 @@ public class VarOrCall extends Expression {
             }
         } else if (identifier.getDeclaration() instanceof MethodDeclaration) {
             MethodDeclaration m = (MethodDeclaration) identifier.getDeclaration();
+            for (Expression a : args) {
+            	a.generateCode(code);
+            }
             String returnLabel = code.nextLabel();
             code.println("MRI R5, " + returnLabel);
             code.println("ADD R2, R1");
