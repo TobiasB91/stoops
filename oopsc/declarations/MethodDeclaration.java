@@ -233,7 +233,7 @@ public class MethodDeclaration extends Declaration {
         code.println(endPosition);
         code.println("; END METHOD " + getIdentifier().getName());
         code.println("end_method_"+getSelfType().getIdentifier().getName()+"_"+getIdentifier().getName()+":");
-        code.println("MRI R5, " + (vars.size() + (ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)result.getType().getDeclaration())) ? 3 : 2) + params.size()));
+        code.println("MRI R5, " + (vars.size() + (ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)result.getType().getDeclaration())) ? 4 : 3) + params.size()));
         code.println("SUB R2, R5 ; Stack korrigieren");
         code.println("SUB R3, R1");
         code.println("MRM R5, (R3) ; Rücksprungadresse holen");

@@ -97,6 +97,7 @@ public class ClassDeclaration extends Declaration {
 
     /**
      * Die Methode führt die Kontextanalyse für diese Klassen-Deklaration durch.
+     * Dabei analysiert diese nur Attribute
      * @param declarations Die an dieser Stelle gültigen Deklarationen.
      * @throws CompileException Während der Kontextanylyse wurde ein Fehler
      *         gefunden.
@@ -123,6 +124,15 @@ public class ClassDeclaration extends Declaration {
         
         // Deklarationsraum verlassen
         declarations.leave();
+        
+        // Standardgröße für Objekte festlegen
+        objectSize = HEADER_SIZE;
+        
+        // Attributtypen auflösen und Indizes innerhalb des Objekts vergeben
+        for (VarDeclaration a : attributes) {
+            a.contextAnalysis(declarations);
+            a.setOffset(objectSize++);
+        }
     }
     
     
@@ -132,16 +142,8 @@ public class ClassDeclaration extends Declaration {
      *         gefunden.
      */
     public void resolve() throws CompileException {        
-        // Standardgröße für Objekte festlegen
-        objectSize = HEADER_SIZE;
-        
+
         Declarations declarations = (Declarations) this.declarations.clone();
-        
-    	// Attributtypen auflösen und Indizes innerhalb des Objekts vergeben
-        for (VarDeclaration a : attributes) {
-            a.contextAnalysis(declarations);
-            a.setOffset(objectSize++);
-        }
         
         // Kontextanalyse für Methoden durchführen
         for (MethodDeclaration m : methods) {
