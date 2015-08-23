@@ -114,6 +114,7 @@ public class ClassDeclaration extends Declaration {
         for (MethodDeclaration m : methods) {
             declarations.add(m);
             m.contextAnalysisForParams(declarations);
+            m.contextAnalysisForReturnType(declarations);
         }
         
         // Wird auf ein Objekt dieser Klasse zugegriffen, werden die Deklarationen
@@ -130,11 +131,7 @@ public class ClassDeclaration extends Declaration {
      * @throws CompileException Während der Kontextanylyse wurde ein Fehler
      *         gefunden.
      */
-    public void resolve() throws CompileException {
-    	
-    	// Neuen Deklarationsraum schaffen
-       // declarations.enter();
-        
+    public void resolve() throws CompileException {        
         // Standardgröße für Objekte festlegen
         objectSize = HEADER_SIZE;
         
@@ -149,11 +146,9 @@ public class ClassDeclaration extends Declaration {
         // Kontextanalyse für Methoden durchführen
         for (MethodDeclaration m : methods) {
             m.setSelfType(this);
+            m.setReturnType();
             m.contextAnalysis(declarations);
         }
-        
-        // Deklarationsraum verlassen
-        //declarations.leave();
     }
      
     /**

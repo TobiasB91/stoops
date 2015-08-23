@@ -3,6 +3,7 @@ package oopsc.parser;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedList;
+
 import oopsc.CompileException;
 import oopsc.Program;
 import oopsc.declarations.ClassDeclaration;
@@ -19,6 +20,7 @@ import oopsc.statements.Assignment;
 import oopsc.statements.CallStatement;
 import oopsc.statements.IfStatement;
 import oopsc.statements.ReadStatement;
+import oopsc.statements.ReturnStatement;
 import oopsc.statements.Statement;
 import oopsc.statements.WhileStatement;
 import oopsc.statements.WriteStatement;
@@ -35,7 +37,7 @@ import oopsc.statements.WriteStatement;
  *
  * memberdecl   ::= vardecl ';'
  *                | METHOD identifier [ '(' vardecl { ';' vardecl } ')' ]
- *                 IS methodbody
+ *                 [':' Identifier ] IS methodbody
  * 
  * vardecl      ::= identifier { ',' identifier } ':' identifier
  * 
@@ -56,6 +58,7 @@ import oopsc.statements.WriteStatement;
  *                  DO statements 
  *                  END WHILE
  *                | memberaccess [ ':=' predicate ] ';'
+ *                | RETURN [ predicate ] ';'
  * 
  * 
  * predicate ::= conjunction { OR conjunction}
@@ -187,8 +190,10 @@ public class SyntaxAnalysis {
         if (lexer.getSymbol().getId() == Symbol.Id.METHOD) {
             lexer.nextSymbol();
             LinkedList<VarDeclaration> params = new LinkedList<VarDeclaration>();
+            ResolvableIdentifier returnIdent = null;
             Identifier name = expectIdent();
             
+            /** Parse eventuell vorhandene Parameter */
             if (lexer.getSymbol().getId() ==  Symbol.Id.LPAREN) {
             	lexer.nextSymbol();
             	vardecl(params, false);
@@ -198,12 +203,18 @@ public class SyntaxAnalysis {
             	}
             	expectSymbol(Symbol.Id.RPAREN);
             }
+            
+            /** Parse eventuell vorhandenen Rückgabetyp */
+            if (lexer.getSymbol().getId() == Symbol.Id.COLON) {
+            	lexer.nextSymbol();
+            	returnIdent = expectResolvableIdent();
+            }
             		
             expectSymbol(Symbol.Id.IS);
             LinkedList<VarDeclaration> vars = new LinkedList<VarDeclaration>();
             LinkedList<Statement> statements = new LinkedList<Statement>();
             Position end = methodbody(vars, statements);
-            methods.add(new MethodDeclaration(name, params, vars, statements, end));
+            methods.add(new MethodDeclaration(name, params, returnIdent, vars, statements, end));
         } else {
             vardecl(attributes, true);
             expectSymbol(Symbol.Id.SEMICOLON);
@@ -320,6 +331,16 @@ public class SyntaxAnalysis {
             expectSymbol(Symbol.Id.WHILE);
             statements.add(new WhileStatement(whileCondition, whileStatements));
             break;
+        case RETURN:
+        	lexer.nextSymbol();
+        	if (lexer.getSymbol().getId() == Symbol.Id.SEMICOLON) {
+        		statements.add(new ReturnStatement(null));
+        		lexer.nextSymbol();
+        	} else {
+        		statements.add(new ReturnStatement(predicate()));
+        		expectSymbol(Symbol.Id.SEMICOLON);
+        	}
+        	break;
         default:
             Expression e = memberAccess();
             if (lexer.getSymbol().getId() == Symbol.Id.BECOMES) {

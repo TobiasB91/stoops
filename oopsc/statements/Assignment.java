@@ -69,4 +69,5 @@ public class Assignment extends Statement {
         code.println("SUB R2, R1");
         code.println("MMR (R5), R6 ; Zuweisen");
     }
+
 }

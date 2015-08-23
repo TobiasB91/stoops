@@ -16,6 +16,8 @@ public class MethodDeclaration extends Declaration {
     /** Die lokale Variable SELF. */
     private VarDeclaration self;
     
+    private VarDeclaration result;
+    
     /** Die lokalen Variablen der Methode. */
     private final LinkedList<VarDeclaration> vars;
     
@@ -28,22 +30,40 @@ public class MethodDeclaration extends Declaration {
     /** Die Quelltextposition des Methodenendes. */
     private final Position endPosition;
     
-    /**
+    /** Der Rückgabetyp der Methode */
+    private final ResolvableIdentifier returnType;
+    
+
+	/**
      * Konstruktor.
      * @param name Der Name der deklarierten Methode.
+     * @param returnIdent 
      * @param vars Die lokalen Variablen der Methode.
      * @param statements Die Anweisungen der Methode, d.h. der Methodenrumpf.
      * @param endPosition Die Quelltextposition des Methodenendes.
      */
-    public MethodDeclaration(Identifier name, LinkedList<VarDeclaration> params, LinkedList<VarDeclaration> vars, LinkedList<Statement> statements,
+    public MethodDeclaration(Identifier name, LinkedList<VarDeclaration> params, ResolvableIdentifier returnType, LinkedList<VarDeclaration> vars, LinkedList<Statement> statements,
             Position endPosition) {
         super(name);
         this.vars = vars;
         this.statements = statements;
         this.endPosition = endPosition;
         this.params = params;
+        this.returnType = returnType;
     }
 
+    void setReturnType() {
+    	assert result == null;
+    	
+    	if(returnType != null) {
+    		result = new VarDeclaration(new Identifier("_result", null), returnType , false);
+    		result.getType().setDeclaration(returnType.getDeclaration());
+    	} else {
+    		result = new VarDeclaration(new Identifier("_result", null), new ResolvableIdentifier("Void", null), false);
+    		result.getType().setDeclaration(ClassDeclaration.VOID_TYPE);
+    	}
+    }
+    
     /**
      * Setzt die Klasse, zu der diese Methode gehört.
      * Dies muss vor der Kontextanalyse gemacht werden.
@@ -79,6 +99,17 @@ public class MethodDeclaration extends Declaration {
     }
     
     /**
+     * Führt die Kontextanalyse für den Rückgabetypen aus.
+     * @param declarations Die an dieser Stelle gültigen Deklarationen.
+     * @throws CompileException Ein Fehler trat während der Kontextanalyse auf.
+     */
+    public void contextAnalysisForReturnType(Declarations declarations) throws CompileException {
+    	if (returnType != null) {
+    		declarations.resolveType(returnType);	
+    	}  	
+	}
+    
+    /**
      * Führt die Kontextanalyse für diese Methoden-Deklaration durch.
      * @param declarations Die an dieser Stelle gültigen Deklarationen.
      * @throws CompileException Während der Kontextanylyse wurde ein Fehler
@@ -98,6 +129,10 @@ public class MethodDeclaration extends Declaration {
         // SELF liegt vor der Rücksprungadresse auf dem Stapel
         self.setOffset(offset);
  
+        // _result liegt an derselben Stelle wie SELF
+        result.setOffset(offset);
+        declarations.add(result);
+        
         for (VarDeclaration p : params) {
         	declarations.add(p);
         	p.setOffset(++offset);
@@ -117,9 +152,22 @@ public class MethodDeclaration extends Declaration {
             v.contextAnalysis(declarations);
         }
         
+        declarations.add(new VarDeclaration(new Identifier("_methodend", null), new ResolvableIdentifier("end_method_"+getSelfType().getIdentifier().getName()+"_"+getIdentifier().getName(), null), false));
+        
         // Kontextanalyse aller Anweisungen durchführen
         for (Statement s : statements) {
             s.contextAnalysis(declarations);
+        }
+        
+        // Überprüfe ob die Methode ein Return-Statement erreicht.
+        if (returnType != null) {
+        	boolean returns = false;
+        	for (Statement s : statements) {
+        		returns |= s.returns();
+        	}
+        	if (!returns) {
+        		throw new CompileException("Kein Return-Statement erreichbar.", null);
+        	}
         }
         
         // Alten Deklarationsraum wiederherstellen
@@ -184,7 +232,8 @@ public class MethodDeclaration extends Declaration {
         }
         code.println(endPosition);
         code.println("; END METHOD " + getIdentifier().getName());
-        code.println("MRI R5, " + (vars.size() + 3 + params.size()));
+        code.println("end_method_"+getSelfType().getIdentifier().getName()+"_"+getIdentifier().getName()+":");
+        code.println("MRI R5, " + (vars.size() + (ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)result.getType().getDeclaration())) ? 3 : 2) + params.size()));
         code.println("SUB R2, R5 ; Stack korrigieren");
         code.println("SUB R3, R1");
         code.println("MRM R5, (R3) ; Rücksprungadresse holen");
@@ -200,4 +249,14 @@ public class MethodDeclaration extends Declaration {
 	public LinkedList<VarDeclaration> getParams() {
 		return params;
 	}
+	
+    /**
+     * Getter für den Rückgabetyp.
+	 * @return the returnIdent
+	 */
+	public ResolvableIdentifier getReturnType() {
+		return returnType;
+	}
+
+	
 }

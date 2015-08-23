@@ -1,6 +1,7 @@
 package oopsc.statements;
 
 import java.util.LinkedList;
+
 import oopsc.CompileException;
 import oopsc.declarations.ClassDeclaration;
 import oopsc.declarations.Declarations;
@@ -105,4 +106,21 @@ public class IfStatement extends Statement {
         code.println("; END IF"); 
         code.println(endLabel + ":");
     }
+    
+    @Override
+	public boolean returns() {
+		boolean thens = false;
+		boolean elses = false;
+		
+		for(Statement s : thenStatements) {
+			thens |= s.returns();
+		}
+		
+		for(Statement s : elseStatements) {
+			elses |= s.returns();
+		}
+		
+		return thens && elses;
+	}
+    
 }

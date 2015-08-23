@@ -9,6 +9,15 @@ import oopsc.streams.TreeStream;
  * Die abstrakte Basisklasse für alle Anweisungen im Syntaxbaum.
  */
 public abstract class Statement {
+	/** 
+	 * Die Methode prüft, ob ein Statement etwas zurückgibt.
+	 * @return Returned?
+	 */
+	public boolean returns() {
+		return false;
+	}
+	
+	
     /**
      * Die Methode führt die Kontextanalyse für diese Anweisung durch.
      * @param declarations Die an dieser Stelle gültigen Deklarationen.

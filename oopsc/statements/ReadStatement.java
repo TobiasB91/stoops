@@ -73,4 +73,5 @@ public class ReadStatement extends Statement {
         code.println("SYS 0, 6 ; Gelesenen Wert in R6 ablegen");
         code.println("MMR (R5), R6 ; Zeichen in neuen Integer schreiben");
     }
+    
 }

@@ -1,6 +1,7 @@
 package oopsc.statements;
 
 import java.util.LinkedList;
+
 import oopsc.CompileException;
 import oopsc.declarations.ClassDeclaration;
 import oopsc.declarations.Declarations;
@@ -85,4 +86,5 @@ public class WhileStatement extends Statement {
         code.println("MRI R0, " + whileLabel);
         code.println(endLabel + ":");
     }
+    
 }

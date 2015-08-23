@@ -72,7 +72,8 @@ public class VarOrCall extends Expression {
      *         gefunden.
      */
     Expression contextAnalysis(Declarations methodClassScope, Declarations declarations,  boolean addSelf) throws CompileException {
-        methodClassScope.resolveVarOrMethod(identifier);
+    	
+		methodClassScope.resolveVarOrMethod(identifier);
         for(Expression arg : args) {
         	arg.contextAnalysis(declarations);
         }
@@ -104,7 +105,8 @@ public class VarOrCall extends Expression {
         } else if (identifier.getDeclaration() instanceof VarDeclaration) {
             setType((ClassDeclaration) ((VarDeclaration) identifier.getDeclaration()).getType().getDeclaration());
         } else if (identifier.getDeclaration() instanceof MethodDeclaration) {
-            setType(ClassDeclaration.VOID_TYPE);
+            ResolvableIdentifier r = ((MethodDeclaration)identifier.getDeclaration()).getReturnType();
+        	setType(r != null ? (ClassDeclaration)r.getDeclaration() : ClassDeclaration.VOID_TYPE);
         } else {
             assert false;
         }
