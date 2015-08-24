@@ -66,4 +66,8 @@ public class CodeStream extends PrintStream {
             println("#" + position.getLine());
         }
     }
+    
+    public String getEndlabel() {
+    	return "end_"+namespace;
+    }
 }

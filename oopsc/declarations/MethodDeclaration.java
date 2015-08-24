@@ -52,12 +52,17 @@ public class MethodDeclaration extends Declaration {
         this.returnType = returnType;
     }
 
-    void setReturnType() {
+    void setReturnType() throws CompileException {
     	assert result == null;
     	
     	if(returnType != null) {
+    		//Wirft eine Fehlermeldung, falls die Methode "main" in der Klasse "Main" von einem anderen Typen als void ist
+    		if(getSelfType().getIdentifier().getName().equals("Main") && getIdentifier().getName().equals("main") 
+        			&& !ClassDeclaration.VOID_TYPE.isA((ClassDeclaration)(returnType.getDeclaration()))) {
+        		throw new CompileException("Hier darf kein Wert zurückgeliefert werden", getIdentifier().getPosition());
+        	}
+    		
     		result = new VarDeclaration(new Identifier("_result", null), returnType , false);
-    		result.getType().setDeclaration(returnType.getDeclaration());
     	} else {
     		result = new VarDeclaration(new Identifier("_result", null), new ResolvableIdentifier("Void", null), false);
     		result.getType().setDeclaration(ClassDeclaration.VOID_TYPE);
@@ -105,7 +110,7 @@ public class MethodDeclaration extends Declaration {
      */
     public void contextAnalysisForReturnType(Declarations declarations) throws CompileException {
     	if (returnType != null) {
-    		declarations.resolveType(returnType);	
+    		declarations.resolveType(returnType);
     	}  	
 	}
     
@@ -151,9 +156,7 @@ public class MethodDeclaration extends Declaration {
         for (VarDeclaration v : vars) {
             v.contextAnalysis(declarations);
         }
-        
-        declarations.add(new VarDeclaration(new Identifier("_methodend", null), new ResolvableIdentifier("end_method_"+getSelfType().getIdentifier().getName()+"_"+getIdentifier().getName(), null), false));
-        
+       
         // Kontextanalyse aller Anweisungen durchführen
         for (Statement s : statements) {
             s.contextAnalysis(declarations);
@@ -166,7 +169,7 @@ public class MethodDeclaration extends Declaration {
         		returns |= s.returns();
         	}
         	if (!returns) {
-        		throw new CompileException("Kein Return-Statement erreichbar.", null);
+        		throw new CompileException("Auf jedem Ausführungspfad wird ein Rückgabewert erwartet", getIdentifier().getPosition());
         	}
         }
         
@@ -232,8 +235,8 @@ public class MethodDeclaration extends Declaration {
         }
         code.println(endPosition);
         code.println("; END METHOD " + getIdentifier().getName());
-        code.println("end_method_"+getSelfType().getIdentifier().getName()+"_"+getIdentifier().getName()+":");
-        code.println("MRI R5, " + (vars.size() + (ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)result.getType().getDeclaration())) ? 4 : 3) + params.size()));
+        code.println(code.getEndlabel()+":");
+        code.println("MRI R5, " + (vars.size() + (ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)result.getType().getDeclaration())) ? 3 : 2) + params.size()));
         code.println("SUB R2, R5 ; Stack korrigieren");
         code.println("SUB R3, R1");
         code.println("MRM R5, (R3) ; Rücksprungadresse holen");

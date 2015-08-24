@@ -333,11 +333,14 @@ public class SyntaxAnalysis {
             break;
         case RETURN:
         	lexer.nextSymbol();
+        	ReturnStatement stmt;
         	if (lexer.getSymbol().getId() == Symbol.Id.SEMICOLON) {
-        		statements.add(new ReturnStatement(null));
+        		stmt = new ReturnStatement(null,lexer.getSymbol().getPosition());
+        		statements.add(stmt);
         		lexer.nextSymbol();
         	} else {
-        		statements.add(new ReturnStatement(predicate()));
+        		stmt = new ReturnStatement(predicate(), lexer.getSymbol().getPosition());
+        		statements.add(stmt);
         		expectSymbol(Symbol.Id.SEMICOLON);
         	}
         	break;

@@ -8,6 +8,7 @@ import oopsc.declarations.Declarations;
 import oopsc.declarations.VarDeclaration;
 import oopsc.expressions.Expression;
 import oopsc.expressions.VarOrCall;
+import oopsc.parser.Position;
 import oopsc.parser.ResolvableIdentifier;
 import oopsc.streams.CodeStream;
 import oopsc.streams.TreeStream;
@@ -19,34 +20,46 @@ public class ReturnStatement extends Statement {
 	
 	private Assignment returnAssignment;	
 	
-	private String endLabel; 
+	
+	private Position position;
 	
 	/**
 	 * Konstruktor.
 	 * @param expr Ausdruck, der zurückgegeben werden soll. 
 	 */
-	public ReturnStatement(Expression returnExpression) {
+	public ReturnStatement(Expression returnExpression, Position position) {		
 		this.returnExpression = returnExpression;
+		this.position = position;
 	}
 	
 	@Override
 	public void contextAnalysis(Declarations declarations) throws CompileException {
-		ResolvableIdentifier methodend = new ResolvableIdentifier("_methodend", null);
-		declarations.resolveVarOrMethod(methodend);
-		endLabel = ((VarDeclaration)methodend.getDeclaration()).getType().getName();
 		if (returnExpression != null) {
+			
 			ResolvableIdentifier result = new ResolvableIdentifier("_result", returnExpression.getPosition());
 			declarations.resolveVarOrMethod(result);
 			
-			returnExpression.contextAnalysis(declarations);
-			returnExpression = returnExpression.box(declarations);
+			if(ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)((VarDeclaration)result.getDeclaration()).getType().getDeclaration()))) {
+				throw new CompileException("Hier darf kein Wert zurückgeliefert werden", returnExpression.getPosition());
+			}
+			
+			returnExpression = returnExpression.contextAnalysis(declarations).box(declarations);
 			
 			
 			returnAssignment = new Assignment(new VarOrCall(result,new LinkedList<Expression>()), returnExpression);
 			
 			if(!(((ClassDeclaration)((VarDeclaration)result.getDeclaration()).getType().getDeclaration())).isA(returnExpression.getType())) {
-				throw new CompileException("Returntyp nicht richtig", returnExpression.getPosition());
+				throw new CompileException("Ausdruck vom Typ " + ((VarDeclaration)result.getDeclaration()).getType().getName() + " erwartet", returnExpression.getPosition());
 			}
+		} else {
+		
+ 			ResolvableIdentifier result = new ResolvableIdentifier("_result", null);
+			declarations.resolveVarOrMethod(result);
+			
+			if ( !ClassDeclaration.VOID_TYPE.isA( ((ClassDeclaration)((VarDeclaration)result.getDeclaration()).getType().getDeclaration())) ) {
+				throw new CompileException("Rückgabewert erwartet", position);
+			}
+			
 		}
 
 	}
@@ -66,7 +79,7 @@ public class ReturnStatement extends Statement {
 		if (returnExpression != null) {
 			returnAssignment.generateCode(code);
 		}
-		code.println("MRI R0, "+endLabel);
+		code.println("MRI R0, "+code.getEndlabel());
 	}
 	
 	@Override
