@@ -1,0 +1,21 @@
+CLASS A IS
+    METHOD B IS
+    BEGIN
+        WRITE 65;
+    END METHOD
+END CLASS
+
+CLASS B IS
+END CLASS
+
+CLASS Main EXTENDS A IS
+    METHOD b : B IS | B ist Funktion, kein Typ
+    BEGIN
+        RETURN NULL;
+    END METHOD
+
+  METHOD main IS
+  BEGIN
+      B;
+  END METHOD
+END CLASS

@@ -1,0 +1,11 @@
+CLASS Main IS
+    METHOD derived(a : A) IS BEGIN
+    END METHOD
+
+    METHOD main IS BEGIN
+        derived(NEW Main);
+    END METHOD
+END CLASS
+
+CLASS A EXTENDS Main IS
+END CLASS

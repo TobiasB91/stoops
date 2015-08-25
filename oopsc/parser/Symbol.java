@@ -9,7 +9,7 @@ public class Symbol {
     public enum Id {
         IDENT, NUMBER, TRUE, FALSE,
         BEGIN, END,
-        CLASS, IS, METHOD, RETURN,
+        CLASS, IS, METHOD, RETURN, EXTENDS,
         READ, WRITE,
         IF, THEN, ELSE, ELSEIF,
         WHILE, DO,

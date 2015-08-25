@@ -31,7 +31,7 @@ import oopsc.statements.WriteStatement;
  * <pre>
  * program      ::= { classdecl }
  *
- * classdecl    ::= CLASS identifier IS
+ * classdecl    ::= CLASS identifier [ EXTENDS identifier ] IS
  *                  { memberdecl } 
  *                  END CLASS
  *
@@ -162,6 +162,13 @@ public class SyntaxAnalysis {
     	while (lexer.getSymbol().getId() == Symbol.Id.CLASS) {
     		lexer.nextSymbol();
 	        Identifier name = expectIdent();
+	        ResolvableIdentifier baseType = null;
+	        if (lexer.getSymbol().getId() == Symbol.Id.EXTENDS) {
+	        	lexer.nextSymbol();
+	        	baseType = expectResolvableIdent();
+	        } else {
+	        	baseType = new ResolvableIdentifier("Object", null);
+	        }
 	        expectSymbol(Symbol.Id.IS);
 	        LinkedList<VarDeclaration> attributes = new LinkedList<VarDeclaration>();
 	        LinkedList<MethodDeclaration> methods = new LinkedList<MethodDeclaration>();
@@ -170,7 +177,7 @@ public class SyntaxAnalysis {
 	        }
 	        lexer.nextSymbol();
 	        expectSymbol(Symbol.Id.CLASS);
-	        classdecls.add(new ClassDeclaration(name, attributes, methods));
+	        classdecls.add(new ClassDeclaration(name, baseType, attributes, methods));
     	}
         return classdecls;
     }

@@ -21,23 +21,30 @@ public class ClassDeclaration extends Declaration {
     public static final int HEADER_SIZE = 0;
     
     /** Ein interner Typ für das Ergebnis von Methoden. */
-    public static final ClassDeclaration VOID_TYPE = new ClassDeclaration(new Identifier("_Void", null));
+    public static final ClassDeclaration VOID_TYPE = new ClassDeclaration(new Identifier("_Void", null), null);
 
     /** Ein interner Typ für null. Dieser Typ ist kompatibel zu allen Klassen. */
-    public static final ClassDeclaration NULL_TYPE = new ClassDeclaration(new Identifier("_Null", null));
+    public static final ClassDeclaration NULL_TYPE = new ClassDeclaration(new Identifier("_Null", null), null);
 
     /** Der interne Basisdatentyp für Zahlen. */
-    public static final ClassDeclaration INT_TYPE = new ClassDeclaration(new Identifier("_Integer", null));
+    public static final ClassDeclaration INT_TYPE = new ClassDeclaration(new Identifier("_Integer", null), null);
 
     /** Der interne Basisdatentyp für Wahrheitswerte. */
-    public static final ClassDeclaration BOOL_TYPE = new ClassDeclaration(new Identifier("_Boolean", null));
+    public static final ClassDeclaration BOOL_TYPE = new ClassDeclaration(new Identifier("_Boolean", null), null);
 
+    /** Die Klasse Object. */
+    public static final ClassDeclaration OBJECT_CLASS = new ClassDeclaration(new Identifier("Object", null), null);
+    
     /** Die Klasse Integer. */
-    public static final ClassDeclaration INT_CLASS = new ClassDeclaration(new Identifier("Integer", null));
+    public static final ClassDeclaration INT_CLASS = new ClassDeclaration(new Identifier("Integer", null), new ResolvableIdentifier("Object", null));
     
     /** Die Klasse Boolean. */
-    public static final ClassDeclaration BOOL_CLASS = new ClassDeclaration(new Identifier("Boolean", null));
+    public static final ClassDeclaration BOOL_CLASS = new ClassDeclaration(new Identifier("Boolean", null), new ResolvableIdentifier("Object", null));
 
+  
+    
+    
+    
     static {
         // Integer und Boolean enthalten ein Element
     	INT_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Integer", null), true));
@@ -59,24 +66,31 @@ public class ClassDeclaration extends Declaration {
      */
     private int objectSize;
 
+    /** Der Basistyp der Klasse */
+    private ResolvableIdentifier baseType;
+    
+    /** Gibt Auskunft, ob die Kontextanalyse gerade in Bearbeitung ist. */
+    private boolean processing = false;
+    
     /**
      * Konstruktor.
      * @param name Der Name der deklarierten Klasse.
      * @param attributes Die Attribute dieser Klasse.
      * @param methods Die Methoden dieser Klasse.
      */
-    public ClassDeclaration(Identifier name, LinkedList<VarDeclaration> attributes, LinkedList<MethodDeclaration> methods) {
+    public ClassDeclaration(Identifier name, ResolvableIdentifier baseType, LinkedList<VarDeclaration> attributes, LinkedList<MethodDeclaration> methods) {
         super(name);
         this.attributes = attributes;
         this.methods = methods;
+        this.baseType = baseType;
     }
 
     /**
      * Privater Konstruktor für Klassenattribute.
      * @param name Der Name der deklarierten Klasse.
      */
-    private ClassDeclaration(Identifier name) {
-        this(name, new LinkedList<VarDeclaration>(), new LinkedList<MethodDeclaration>());
+    private ClassDeclaration(Identifier name, ResolvableIdentifier baseType) {
+        this(name, baseType, new LinkedList<VarDeclaration>(), new LinkedList<MethodDeclaration>());
     }
     
     /**
@@ -103,6 +117,24 @@ public class ClassDeclaration extends Declaration {
      *         gefunden.
      */
     public void contextAnalysis(Declarations declarations) throws CompileException {
+    	processing = true;
+    	
+    	if (baseType != null) { 
+    		if (baseType.getDeclaration() == null) {
+    			declarations.resolveType(baseType);	
+    		}
+    		
+    		if (((ClassDeclaration)baseType.getDeclaration()).isProcessing()) {
+	    		throw new CompileException("Zyklische Vererbung", baseType.getPosition());
+	    	}
+    		
+    		((ClassDeclaration)baseType.getDeclaration()).contextAnalysis(declarations);
+    		declarations = ((ClassDeclaration)baseType.getDeclaration()).getDeclarations();		
+    		
+    		
+    	}
+    	
+    	
     	 // Neuen Deklarationsraum schaffen
         declarations.enter();
     	
@@ -126,13 +158,19 @@ public class ClassDeclaration extends Declaration {
         declarations.leave();
         
         // Standardgröße für Objekte festlegen
-        objectSize = HEADER_SIZE;
+        if (OBJECT_CLASS.isA(this)) {
+        	objectSize = HEADER_SIZE;
+        } else {
+        	objectSize = ((ClassDeclaration)baseType.getDeclaration()).getObjectSize() + 1;
+        }
         
         // Attributtypen auflösen und Indizes innerhalb des Objekts vergeben
         for (VarDeclaration a : attributes) {
             a.contextAnalysis(declarations);
             a.setOffset(objectSize++);
         }
+        
+        processing = false;
     }
     
     
@@ -162,11 +200,12 @@ public class ClassDeclaration extends Declaration {
         // Spezialbehandlung für null, das mit allen Klassen kompatibel ist,
         // aber nicht mit den Basisdatentypen _Integer und _Boolean sowie auch nicht
         // an Stellen erlaubt ist, wo gar kein Wert erwartet wird.
-        if (this == NULL_TYPE && expected != INT_TYPE && expected != BOOL_TYPE && expected != VOID_TYPE) {
-            return true;
-        } else {
-            return this == expected;
-        }
+//        if (this == NULL_TYPE && expected != INT_TYPE && expected != BOOL_TYPE && expected != VOID_TYPE) {
+//            return true;
+//        } else {
+//            return this == expected;
+//        }
+        return this == expected || this == NULL_TYPE && expected.isA(OBJECT_CLASS) || this != OBJECT_CLASS && baseType != null && ((ClassDeclaration) baseType.getDeclaration()).isA(expected) ;   
     }
     
     /**
@@ -207,7 +246,7 @@ public class ClassDeclaration extends Declaration {
      * @param tree Der Strom, in den die Ausgabe erfolgt.
      */
     public void print(TreeStream tree) {
-        tree.println("CLASS " + getIdentifier().getName());
+        tree.println("CLASS " + getIdentifier().getName() + (baseType != null ? " EXTENDS " + baseType.getName() : ""));
         tree.indent();
         if (!attributes.isEmpty()) {
             tree.println("ATTRIBUTES");
@@ -242,4 +281,12 @@ public class ClassDeclaration extends Declaration {
         }
         code.println("; END CLASS " + getIdentifier().getName());
     }
+
+	/**
+	 * @return the processing
+	 */
+	public boolean isProcessing() {
+		return processing;
+	}
+
 }

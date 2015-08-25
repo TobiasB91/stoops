@@ -1,0 +1,45 @@
+CLASS Main EXTENDS B IS
+    a : Integer;
+
+    METHOD main IS
+         a : A;
+         b : B;
+         m : Main;
+    BEGIN
+        m := SELF;
+        b := m;
+        a := m;
+
+        set('A');
+        SELF.a := 'M';
+        c := 'B';
+
+        WRITE get;
+        WRITE SELF.a;
+        WRITE c;
+        
+        READ a.a;
+        READ m.c;
+        READ m.a;
+        
+        WRITE a.get;
+        WRITE m.c;
+        WRITE m.a;
+    END METHOD
+END CLASS
+
+CLASS A IS
+    a : Integer;
+
+    METHOD set(a : Integer) IS BEGIN
+        SELF.a := a;
+    END METHOD
+
+    METHOD get : Integer IS BEGIN
+        RETURN a;
+    END METHOD
+END CLASS
+
+CLASS B EXTENDS A IS
+    c : Integer;
+END CLASS

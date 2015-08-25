@@ -1,0 +1,22 @@
+| Dieses Programm testet die Typinferenz für eine abgeleitete BOOLEAN-Klasse
+CLASS B EXTENDS Boolean IS
+    a : Integer;
+    METHOD print IS
+    BEGIN
+        WRITE a;
+    END METHOD
+END CLASS
+
+CLASS Main IS
+    METHOD main IS
+        b : B;
+    BEGIN
+        b := NEW B;
+        b.a := 'A';
+        b.print;
+        IF b THEN
+            WRITE 'B';
+        END IF
+    END METHOD
+END CLASS
+

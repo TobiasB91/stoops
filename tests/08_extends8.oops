@@ -1,0 +1,12 @@
+CLASS Main IS
+    METHOD base(a : Main) IS BEGIN
+        WRITE 'a';
+    END METHOD
+
+    METHOD main IS BEGIN
+        base(NEW A);
+    END METHOD
+END CLASS
+
+CLASS A EXTENDS Main IS
+END CLASS

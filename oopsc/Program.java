@@ -36,6 +36,7 @@ public class Program {
     public Program(LinkedList<ClassDeclaration> classes) {
     	classes.add(ClassDeclaration.INT_CLASS);
     	classes.add(ClassDeclaration.BOOL_CLASS);
+    	classes.add(ClassDeclaration.OBJECT_CLASS);
         this.classes = classes;
     }
     

@@ -29,11 +29,10 @@ public abstract class Expression {
     }
     
     /**
-     * Setzt den Typ dieses Ausdrucks. Er darf nur einmal gesetzt werden.
+     * Setzt den Typ dieses Ausdrucks.  
      * @param type Der Type des Ausdrucks.
      */
     void setType(ClassDeclaration type) {
-        assert this.type == null;
         this.type = type;
     }
     

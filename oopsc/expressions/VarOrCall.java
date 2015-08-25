@@ -84,7 +84,6 @@ public class VarOrCall extends Expression {
         		throw new CompileException("Falsche Anzahl von Parametern", getPosition());
         	}
         	for (int i = 0; i < args.size(); ++i) {
-        		//declarations.resolveType(((MethodDeclaration) identifier.getDeclaration()).getParams().get(i).getType());
         		args.set(i, args.get(i).box(declarations));
         		ClassDeclaration argClass = args.get(i).getType();
         		ClassDeclaration paramClass = ((ClassDeclaration)((MethodDeclaration) identifier.getDeclaration())
