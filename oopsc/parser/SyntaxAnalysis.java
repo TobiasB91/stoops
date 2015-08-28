@@ -528,6 +528,10 @@ public class SyntaxAnalysis {
             e = new VarOrCall(new ResolvableIdentifier("_self", lexer.getSymbol().getPosition()), new LinkedList<Expression>());
             lexer.nextSymbol();
             break;
+        case BASE:
+        	e = new VarOrCall(new ResolvableIdentifier("_base", lexer.getSymbol().getPosition()), new LinkedList<Expression>());
+        	lexer.nextSymbol();
+        	break;
         case NEW:
             Position position = lexer.getSymbol().getPosition();
             lexer.nextSymbol();

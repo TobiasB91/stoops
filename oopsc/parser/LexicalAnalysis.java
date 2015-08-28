@@ -94,6 +94,7 @@ class LexicalAnalysis {
         keywords.put("NOT", Symbol.Id.NOT);
         keywords.put("RETURN", Symbol.Id.RETURN);
         keywords.put("EXTENDS", Symbol.Id.EXTENDS);
+        keywords.put("BASE", Symbol.Id.BASE);
 
         position = new Position(1, 0);
         nextChar();

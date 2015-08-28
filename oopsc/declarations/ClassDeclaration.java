@@ -1,5 +1,6 @@
 package oopsc.declarations;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import oopsc.CompileException;
@@ -18,7 +19,7 @@ public class ClassDeclaration extends Declaration {
      * Konstante für die Größe der Verwaltungsinformation am Anfang eines jeden Objekts.
      * Bisher ist die Größe 0.
      */
-    public static final int HEADER_SIZE = 0;
+    public static final int HEADER_SIZE = 1;
     
     /** Ein interner Typ für das Ergebnis von Methoden. */
     public static final ClassDeclaration VOID_TYPE = new ClassDeclaration(new Identifier("_Void", null), null);
@@ -40,10 +41,7 @@ public class ClassDeclaration extends Declaration {
     
     /** Die Klasse Boolean. */
     public static final ClassDeclaration BOOL_CLASS = new ClassDeclaration(new Identifier("Boolean", null), new ResolvableIdentifier("Object", null));
-
-  
-    
-    
+         
     
     static {
         // Integer und Boolean enthalten ein Element
@@ -69,8 +67,15 @@ public class ClassDeclaration extends Declaration {
     /** Der Basistyp der Klasse */
     private ResolvableIdentifier baseType;
     
-    /** Gibt Auskunft, ob die Kontextanalyse gerade in Bearbeitung ist. */
+    public ResolvableIdentifier getBaseType() {
+		return baseType;
+	}
+
+	/** Gibt Auskunft, ob die Kontextanalyse gerade in Bearbeitung ist. */
     private boolean processing = false;
+    
+    /** Die virtuelle Methodentabelle der Klasse. */
+    private ArrayList<MethodDeclaration> virtualMethodTable = new ArrayList<MethodDeclaration>();
     
     /**
      * Konstruktor.
@@ -109,7 +114,17 @@ public class ClassDeclaration extends Declaration {
         return objectSize;
     }
 
+    
     /**
+     * Liefert die virtuelle Methodentabelle der Klasse.
+     * @return Die virtuelle Methodentabelle der Klasse.
+     */
+    public ArrayList<MethodDeclaration> getVirtualMethodTable() {
+		return virtualMethodTable;
+	}
+
+
+	/**
      * Die Methode führt die Kontextanalyse für diese Klassen-Deklaration durch.
      * Dabei analysiert diese nur Attribute
      * @param declarations Die an dieser Stelle gültigen Deklarationen.
@@ -180,14 +195,41 @@ public class ClassDeclaration extends Declaration {
      *         gefunden.
      */
     public void resolve() throws CompileException {        
-
+    	if (!virtualMethodTable.isEmpty()) {
+    		return;
+    	}
+    
         Declarations declarations = (Declarations) this.declarations.clone();
+        
+        ArrayList<MethodDeclaration> baseMethodTable = new ArrayList<MethodDeclaration>();
+        if(baseType != null) {
+            ClassDeclaration baseClass = (ClassDeclaration) baseType.getDeclaration();
+            baseClass.resolve();
+            baseMethodTable = baseClass.getVirtualMethodTable();
+        }
+        
+        virtualMethodTable.addAll(baseMethodTable);
         
         // Kontextanalyse für Methoden durchführen
         for (MethodDeclaration m : methods) {
             m.setSelfType(this);
+            m.setBaseType(this);
             m.setReturnType();
             m.contextAnalysis(declarations);
+            boolean added = false;
+        	for(int i = 0; i < baseMethodTable.size(); ++i) {
+        		if (baseMethodTable.get(i).is(m)) {
+        			virtualMethodTable.set(i, m);
+        			added = true;
+        		}
+        	}
+        	if(!added) {
+        		virtualMethodTable.add(m);
+        	}
+        }
+        
+        for(int i = 0; i < virtualMethodTable.size(); ++i) {
+        	virtualMethodTable.get(i).setVMTIndex(i);
         }
     }
      
@@ -197,14 +239,6 @@ public class ClassDeclaration extends Declaration {
      * @return Sind die beiden Typen sind kompatibel?
      */
     public boolean isA(ClassDeclaration expected) {
-        // Spezialbehandlung für null, das mit allen Klassen kompatibel ist,
-        // aber nicht mit den Basisdatentypen _Integer und _Boolean sowie auch nicht
-        // an Stellen erlaubt ist, wo gar kein Wert erwartet wird.
-//        if (this == NULL_TYPE && expected != INT_TYPE && expected != BOOL_TYPE && expected != VOID_TYPE) {
-//            return true;
-//        } else {
-//            return this == expected;
-//        }
         return this == expected || this == NULL_TYPE && expected.isA(OBJECT_CLASS) || this != OBJECT_CLASS && baseType != null && ((ClassDeclaration) baseType.getDeclaration()).isA(expected) ;   
     }
     
@@ -274,11 +308,21 @@ public class ClassDeclaration extends Declaration {
      */
     public void generateCode(CodeStream code) {
         code.println("; CLASS " + getIdentifier().getName());
+
+        //Label für die VMT
+        code.println(getIdentifier().getName() + ":");
+        
+        //Adressen der VMT
+        for(int i = 0; i < virtualMethodTable.size(); ++i) {
+        	code.println("DAT 1, " + virtualMethodTable.get(i).getSelfType().getIdentifier().getName() + "_" + virtualMethodTable.get(i).getIdentifier().getName());
+        }
         
         // Synthese für alle Methoden
         for (MethodDeclaration m : methods) {
             m.generateCode(code);
         }
+        
+        
         code.println("; END CLASS " + getIdentifier().getName());
     }
 

@@ -16,6 +16,8 @@ public class MethodDeclaration extends Declaration {
     /** Die lokale Variable SELF. */
     private VarDeclaration self;
     
+    private VarDeclaration base;
+    
     private VarDeclaration result;
     
     /** Die lokalen Variablen der Methode. */
@@ -33,6 +35,8 @@ public class MethodDeclaration extends Declaration {
     /** Der Rückgabetyp der Methode */
     private final ResolvableIdentifier returnType;
     
+    /** Die Nummer in der VMT */
+    private int vmtIndex;
 
 	/**
      * Konstruktor.
@@ -84,12 +88,36 @@ public class MethodDeclaration extends Declaration {
     }
     
     /**
+     * Setzt die Basisklasse, zu der diese Methode gehört.
+     * Dies muss vor der Kontextanalyse gemacht werden.
+     * @param selfType Der Typ von SELF.
+     */
+    void setBaseType(ClassDeclaration selfType) {
+        assert base == null;
+        
+        if (selfType.getBaseType() != null) {
+        	base = new VarDeclaration(new Identifier("_base", null), 
+        			new ResolvableIdentifier(((ClassDeclaration) selfType.getBaseType().getDeclaration()).getIdentifier().getName(), null), false);
+        	base.getType().setDeclaration(((ClassDeclaration) selfType.getBaseType().getDeclaration()));
+        }
+    }
+    
+    /**
      * Liefert die Klasse, zu der diese Methode gehört.
      * Sie muss vorher gesetzt worden sein.
      * @return Der Typ von SELF.
      */
     public ClassDeclaration getSelfType() {
         return (ClassDeclaration) self.getType().getDeclaration();
+    }
+    
+    /**
+     * Liefert die Basisklasse, zu der diese Methode gehört.
+     * Sie muss vorher gesetzt worden sein.
+     * @return Der Typ von BASE.
+     */
+    public ClassDeclaration getBaseType() {
+        return (ClassDeclaration) base.getType().getDeclaration();
     }
     
     /**
@@ -137,6 +165,10 @@ public class MethodDeclaration extends Declaration {
         // _result liegt an derselben Stelle wie SELF
         result.setOffset(offset);
         declarations.add(result);
+        
+        // Ebenso wie BASE
+        base.setOffset(offset);
+        declarations.add(base);
         
         for (VarDeclaration p : params) {
         	declarations.add(p);
@@ -260,6 +292,44 @@ public class MethodDeclaration extends Declaration {
 	public ResolvableIdentifier getReturnType() {
 		return returnType;
 	}
-
 	
+	/**
+	 * Gibt zurück, ob die Signatur beider Methoden übereinstimmen.
+	 * @param method Die andere Methode
+	 * @return Ob die Signaturen der beiden Methoden übereinstimmen
+	 * @throws CompileException Eine Überladung findet statt - nichts unterstützt
+	 */
+	public boolean is(MethodDeclaration method) throws CompileException {
+		if(!getIdentifier().getName().equals(method.getIdentifier().getName())) {
+			return false;
+		}
+		
+		if(params.size() != method.getParams().size()) {
+			throw new CompileException("PARAMETER UNTERSCHIEDLICH VIELE , OVERLOAD, OVERLOAD, ERROR, ERROR", method.getIdentifier().getPosition());
+		}
+		
+		for(int i = 0; i < params.size(); ++i) {
+			if(!params.get(i).getType().getName().equals(method.getParams().get(i).getType().getName())) {
+				throw new CompileException("PARAMETER UNTERSCHIEDLICHER TYP, ERROR, ERROR, TERMINIEREN MENSCHLICHE RASSE, ERROR, ERROR", method.getIdentifier().getPosition());
+			}
+		}
+		
+		if(returnType != null && method.getReturnType() != null) {
+			if(!returnType.getName().equals(method.getReturnType().getName())) {
+				throw new CompileException("RETURNTYP UNTERSCHIEDLICHER TYP, FEHLER, FEHLER, COMPILER NICHT EINSATZBEREIT", method.getIdentifier().getPosition());
+			}
+		} else if(!(returnType == null && method.getReturnType() == null)) {
+			throw new CompileException("RETURNTYP UNTERSCHIEDLICHER TYP, FEHLER, FEHLER, COMPILER NICHT EINSATZBEREIT", method.getIdentifier().getPosition());
+		}
+		
+		return true;
+	}
+	
+	public int getVMTIndex() {
+		return vmtIndex;
+	}
+	
+	public void setVMTIndex(int vmtIndex) {
+		this.vmtIndex = vmtIndex;
+	}
 }

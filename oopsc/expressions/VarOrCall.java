@@ -19,8 +19,10 @@ public class VarOrCall extends Expression {
     /** Der Name des Attributs, der Variablen oder der Methode. */
     private final ResolvableIdentifier identifier;
 
-    /** Die Argumente der Methode; ansonsten leer. */
+	/** Die Argumente der Methode; ansonsten leer. */
     private final LinkedList<Expression> args;
+    
+    private boolean bindStatic = false;
     
     /**
      * Konstruktor.
@@ -40,6 +42,10 @@ public class VarOrCall extends Expression {
         return identifier.getDeclaration() instanceof VarDeclaration;
     }
     
+    public ResolvableIdentifier getIdentifier() {
+		return identifier;
+	}
+    
    /**
      * Die Methode führt die Kontextanalyse für diesen Ausdruck durch.
      * Dabei wird ein Zugriff über SELF in den Syntaxbaum eingefügt,
@@ -53,7 +59,7 @@ public class VarOrCall extends Expression {
      *         gefunden.
      */
     public Expression contextAnalysis(Declarations declarations) throws CompileException {
-        return contextAnalysis(declarations, declarations, true);
+        return contextAnalysis(declarations, declarations, true, false);
     }
 
     /**
@@ -71,8 +77,8 @@ public class VarOrCall extends Expression {
      * @throws CompileException Während der Kontextanylyse wurde ein Fehler
      *         gefunden.
      */
-    Expression contextAnalysis(Declarations methodClassScope, Declarations declarations,  boolean addSelf) throws CompileException {
-    	
+    Expression contextAnalysis(Declarations methodClassScope, Declarations declarations,  boolean addSelf, boolean bindStatic) throws CompileException {
+    	this.bindStatic = bindStatic;
 		methodClassScope.resolveVarOrMethod(identifier);
         for(Expression arg : args) {
         	arg.contextAnalysis(declarations);
@@ -161,8 +167,21 @@ public class VarOrCall extends Expression {
             code.println("MRI R5, " + returnLabel);
             code.println("ADD R2, R1");
             code.println("MMR (R2), R5 ; Rücksprungadresse auf den Stapel");
-            code.println("; Statischer Aufruf von " + identifier.getName());
-            code.println("MRI R0, " + m.getSelfType().getIdentifier().getName() + "_" + m.getIdentifier().getName());
+            
+            if (!bindStatic) {
+	            code.println("; Dynamischer Aufruf von " + identifier.getName());
+	            code.println("MRR R6, R2");
+	            code.println("MRI R7, " + m.getParams().size() + 1);
+	            code.println("SUB R6, R7");
+	            code.println("MRM R7, (R6)");
+	            code.println("MRI R6, " + m.getVMTIndex());
+	            code.println("ADD R7, R6");
+	            code.println("MRM R0, (R7)");
+            } else {
+            	code.println("; Statischer Aufruf von " + identifier.getName());
+            	code.println("MRI R0, " + m.getSelfType().getIdentifier().getName() + "_" + m.getIdentifier().getName());
+            }
+            
             code.println(returnLabel + ":");
         } else {
             assert false;

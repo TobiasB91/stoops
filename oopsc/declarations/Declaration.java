@@ -26,6 +26,13 @@ public abstract class Declaration {
     public Identifier getIdentifier() {
         return identifier;
     }
+    
+    
+    /** Wertet konstante Ausdrücke aus und wendet ein paar Transformationen an. */
+    public void optimize() {
+    	
+    }
+    
 
     /**
      * Führt die Kontextanalyse für diese Deklaration durch.

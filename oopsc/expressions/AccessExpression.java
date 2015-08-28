@@ -44,6 +44,11 @@ public class AccessExpression extends Expression {
      */
     public Expression contextAnalysis(Declarations declarations) throws CompileException {
         leftOperand = leftOperand.contextAnalysis(declarations);
+        
+        boolean isBase = false;
+        if(leftOperand instanceof VarOrCall) {
+        	isBase = "_base".equals(((VarOrCall) leftOperand).getIdentifier().getName());
+        }
 
         // Dereferenzieren. Außerdem könnte man einen Ausdruck wie z.B. 5.print
         // schreiben, wenn Integer Methoden hätte.
@@ -51,7 +56,7 @@ public class AccessExpression extends Expression {
 
         // Der rechte Operand hat einen Deklarationsraum, der sich aus dem 
         // Ergebnistyp des linken Operanden ergibt.
-        rightOperand.contextAnalysis(leftOperand.getType().getDeclarations(), declarations, false);
+        rightOperand.contextAnalysis(leftOperand.getType().getDeclarations(), declarations, false, isBase);
 
         // Der Typ dieses Ausdrucks ist immer der des rechten Operanden.
         setType(rightOperand.getType());
@@ -79,7 +84,7 @@ public class AccessExpression extends Expression {
      * @param code Der Strom, in den die Ausgabe erfolgt.
      */
     public void generateCode(CodeStream code) {
-        leftOperand.generateCode(code);
+    	leftOperand.generateCode(code);
         rightOperand.generateCode(code);
     }
 }

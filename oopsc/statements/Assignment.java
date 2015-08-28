@@ -3,6 +3,7 @@ package oopsc.statements;
 import oopsc.CompileException;
 import oopsc.declarations.Declarations;
 import oopsc.expressions.Expression;
+import oopsc.expressions.VarOrCall;
 import oopsc.streams.CodeStream;
 import oopsc.streams.TreeStream;
 
@@ -37,6 +38,9 @@ public class Assignment extends Statement {
         rightOperand = rightOperand.contextAnalysis(declarations);
         if (!leftOperand.isLValue()) {
             throw new CompileException("L-Wert erwartet", leftOperand.getPosition());
+        }
+        if(leftOperand instanceof VarOrCall && "_base".equals(((VarOrCall) leftOperand).getIdentifier().getName()))  {
+        	throw new CompileException("Error, Error, SCHmerror, kein Assignment nö", leftOperand.getPosition());
         }
         rightOperand = rightOperand.box(declarations);
         rightOperand.getType().check(leftOperand.getType(), rightOperand.getPosition());
