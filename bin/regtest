@@ -52,8 +52,8 @@ for i in $*; do
     fi
     java -ea -Dfile.encoding=UTF-8 -jar "$baseDir/$oopsc" $i $name.asm >$name.$ext
     if [ $? = 0 ]; then
-        echo abc | java -Dfile.encoding=UTF-8 -jar "$baseDir/OOPSVM.jar" $name.asm >$name.$ext
-        echo xyz | java -Dfile.encoding=UTF-8 -jar "$baseDir/OOPSVM.jar" $name.asm >>$name.$ext
+        echo abc | java -Dfile.encoding=UTF-8 -jar "$baseDir/OOPSVM.jar"  $name.asm >$name.$ext
+        echo xyz | java -Dfile.encoding=UTF-8 -jar "$baseDir/OOPSVM.jar"  $name.asm >>$name.$ext
     fi
     if [ $ext == compare ]; then
         diff $name.out $name.compare >/dev/null

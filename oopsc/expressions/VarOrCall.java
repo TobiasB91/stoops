@@ -171,12 +171,13 @@ public class VarOrCall extends Expression {
             if (!bindStatic) {
 	            code.println("; Dynamischer Aufruf von " + identifier.getName());
 	            code.println("MRR R6, R2");
-	            code.println("MRI R7, " + m.getParams().size() + 1);
+	            code.println("MRI R7, " + (m.getParams().size() + 1) );
 	            code.println("SUB R6, R7");
 	            code.println("MRM R7, (R6)");
-	            code.println("MRI R6, " + m.getVMTIndex());
-	            code.println("ADD R7, R6");
-	            code.println("MRM R0, (R7)");
+	            code.println("MRM R6, (R7)");
+	            code.println("MRI R7, " + m.getVMTIndex());
+	            code.println("ADD R6, R7");
+	            code.println("MRM R0, (R6)");
             } else {
             	code.println("; Statischer Aufruf von " + identifier.getName());
             	code.println("MRI R0, " + m.getSelfType().getIdentifier().getName() + "_" + m.getIdentifier().getName());

@@ -305,21 +305,21 @@ public class MethodDeclaration extends Declaration {
 		}
 		
 		if(params.size() != method.getParams().size()) {
-			throw new CompileException("PARAMETER UNTERSCHIEDLICH VIELE , OVERLOAD, OVERLOAD, ERROR, ERROR", method.getIdentifier().getPosition());
+			throw new CompileException("Unerlaubte Überladung", method.getIdentifier().getPosition());
 		}
 		
 		for(int i = 0; i < params.size(); ++i) {
 			if(!params.get(i).getType().getName().equals(method.getParams().get(i).getType().getName())) {
-				throw new CompileException("PARAMETER UNTERSCHIEDLICHER TYP, ERROR, ERROR, TERMINIEREN MENSCHLICHE RASSE, ERROR, ERROR", method.getIdentifier().getPosition());
+				throw new CompileException("Unerlaubte Überladung", method.getIdentifier().getPosition());
 			}
 		}
 		
 		if(returnType != null && method.getReturnType() != null) {
 			if(!returnType.getName().equals(method.getReturnType().getName())) {
-				throw new CompileException("RETURNTYP UNTERSCHIEDLICHER TYP, FEHLER, FEHLER, COMPILER NICHT EINSATZBEREIT", method.getIdentifier().getPosition());
+				throw new CompileException("Unerlaubte Überladung", method.getIdentifier().getPosition());
 			}
 		} else if(!(returnType == null && method.getReturnType() == null)) {
-			throw new CompileException("RETURNTYP UNTERSCHIEDLICHER TYP, FEHLER, FEHLER, COMPILER NICHT EINSATZBEREIT", method.getIdentifier().getPosition());
+			throw new CompileException("Unerlaubte Überladung", method.getIdentifier().getPosition());
 		}
 		
 		return true;
