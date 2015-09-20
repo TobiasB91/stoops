@@ -96,7 +96,11 @@ public class Program {
         code.setNamespace("_init");
         code.println("MRI R1, 1 ; R1 ist immer 1");
         code.println("MRI R2, _stack ; R2 zeigt auf Stapel");
-        code.println("MRI R4, _heap ; R4 zeigt auf die nächste freie Stelle auf dem Heap");
+        //code.println("MRI R4, _heap ; R4 zeigt auf die nächste freie Stelle auf dem Heap");
+        code.println("MRI R5, _heap");
+        code.println("MRI R6, _heap");
+        code.println("ADD R6, R1");
+        code.println("MMR (R5), R6");
         
         // Ein Objekt der Klasse Main konstruieren und die Methode main aufrufen.
         main.generateCode(code);
@@ -111,7 +115,7 @@ public class Program {
         code.println("_stack: ; Hier fängt der Stapel an");
         code.println("DAT " + stackSize + ", 0");
         code.println("_heap: ; Hier fängt der Heap an");
-        code.println("DAT " + heapSize + ", 0");
+        code.println("DAT " + (heapSize + 1) + ", 0");
         code.println("_end: ; Programmende");
     }
 }

@@ -57,9 +57,15 @@ public class NewExpression extends Expression {
         code.println("; NEW " + newType.getName());
         code.println("ADD R2, R1");
         code.println("MRI R7, " + ((ClassDeclaration)newType.getDeclaration()).getIdentifier().getName());
-        code.println("MMR (R4), R7");
-        code.println("MMR (R2), R4 ; Referenz auf neues Objekt auf den Stapel legen");
-        code.println("MRI R5, " + ((ClassDeclaration) newType.getDeclaration()).getObjectSize());
-        code.println("ADD R4, R5 ; Heap weiter zählen");
+        //code.println("MMR (R4), R7");
+        code.println("MRI R6, _heap");
+        code.println("MRM R5, (R6)");
+        code.println("MMR (R5), R7");
+        //code.println("MMR (R2), R4 ; Referenz auf neues Objekt auf den Stapel legen");
+        code.println("MMR (R2), R5 ; Referenz auf neues Objekt auf den Stapel legen");
+        code.println("MRI R7, " + ((ClassDeclaration) newType.getDeclaration()).getObjectSize());
+        //code.println("ADD R4, R5 ; Heap weiter zählen");
+        code.println("ADD R5, R7");
+        code.println("MMR (R6), R5");
     }
 }
