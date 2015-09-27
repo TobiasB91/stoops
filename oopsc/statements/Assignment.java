@@ -57,6 +57,15 @@ public class Assignment extends Statement {
         rightOperand.print(tree);
         tree.unindent();
     }
+    
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+		leftOperand = leftOperand.optimize();
+		rightOperand = rightOperand.optimize();
+	}
 
     /**
      * Die Methode generiert den Assembler-Code für diese Anweisung. Sie geht 

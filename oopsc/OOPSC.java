@@ -27,6 +27,7 @@ class OOPSC {
         boolean showSymbols = false;
         boolean showIdentifiers = false;
         boolean showSyntax = false;
+        boolean optimize = false;
         int heapSize = 100;
         int stackSize = 100;
 
@@ -43,6 +44,8 @@ class OOPSC {
                     System.out.println("Fehlendes Argument fuer " + arg);
                     usage();
                 }
+            } else if (arg.equals("-o")) {
+            	optimize = true;
             } else if (arg.equals("-i")) {
                 showIdentifiers = true;
             } else if (arg.equals("-l")) {
@@ -83,6 +86,10 @@ class OOPSC {
             
             p.contextAnalysis();
             
+            if (optimize) {
+            	p.optimize();
+            }
+            
             if (showIdentifiers) {
                 ResolvableIdentifier.print();
             }
@@ -112,6 +119,7 @@ class OOPSC {
      */
     private static void usage() {
         System.out.println("java -jar OOPSC.jar [-c] [-h] [-hs <n>] [-i] [-l] [-s] [-ss <n>] <quelldatei> [<ausgabedatei>]");
+        System.out.println("    -o       Optimiert den Syntaxbaum, bevor der Code generiert wird");
         System.out.println("    -c       Zeige das Ergebnis der Kontextanalyse");
         System.out.println("    -h       Zeige diese Hilfe");
         System.out.println("    -hs <n>  Reserviere <n> Worte fuer den Heap (Standard ist 100)");

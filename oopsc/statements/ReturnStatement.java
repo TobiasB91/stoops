@@ -74,6 +74,16 @@ public class ReturnStatement extends Statement {
 	        tree.unindent();
 	}
 
+	/**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+    	if (returnExpression != null) {
+    		returnExpression = returnExpression.optimize();
+	    }
+    }
+	
 	@Override
 	public void generateCode(CodeStream code) {
 		if (returnExpression != null) {

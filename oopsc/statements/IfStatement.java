@@ -80,6 +80,20 @@ public class IfStatement extends Statement {
     }
 
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+    	condition = condition.optimize();
+    	for(Statement s : thenStatements) {
+    		s.optimize();
+    	}
+    	for(Statement s : elseStatements) {
+    		s.optimize();
+    	}
+	}
+    
+    /**
      * Die Methode generiert den Assembler-Code für diese Anweisung. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.

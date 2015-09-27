@@ -135,4 +135,13 @@ public abstract class Expression {
             return this;
         }
     }
+
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     * @return Der optimierte Ausdruck.
+     */
+	public Expression optimize() {
+		return this;
+	}
 }

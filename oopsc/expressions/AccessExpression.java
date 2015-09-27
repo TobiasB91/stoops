@@ -77,6 +77,17 @@ public class AccessExpression extends Expression {
         rightOperand.print(tree);
         tree.unindent();
     }
+    
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     * @return Der optimierte Ausdruck.
+     */
+	public Expression optimize() {
+		leftOperand = leftOperand.optimize();
+		rightOperand = (VarOrCall) rightOperand.optimize();
+		return this;
+	}
 
     /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck. Sie geht 

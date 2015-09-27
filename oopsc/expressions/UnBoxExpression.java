@@ -12,7 +12,7 @@ import oopsc.streams.TreeStream;
  */
 public class UnBoxExpression extends Expression {
     /** Der Ausdruck, der das auszupackende Objekt berechnet. */
-    private final Expression operand;
+    private Expression operand;
     
     /**
      * Konstruktor.
@@ -44,6 +44,16 @@ public class UnBoxExpression extends Expression {
         tree.unindent();
     }
 
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     * @return Der optimierte Ausdruck.
+     */
+	public Expression optimize() {
+		operand = operand.optimize();
+		return this;
+	}
+    
     /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.

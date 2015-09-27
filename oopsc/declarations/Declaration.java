@@ -28,7 +28,10 @@ public abstract class Declaration {
     }
     
     
-    /** Wertet konstante Ausdrücke aus und wendet ein paar Transformationen an. */
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
     public void optimize() {
     	
     }

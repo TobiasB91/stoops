@@ -33,9 +33,20 @@ public abstract class Statement {
     public abstract void print(TreeStream tree);
 
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+				
+	}
+    
+    /**
      * Die Methode generiert den Assembler-Code für diese Anweisung. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.
      */
     public abstract void generateCode(CodeStream code);
+
+
+	
 }

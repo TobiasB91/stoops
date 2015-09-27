@@ -44,6 +44,14 @@ public class WriteStatement extends Statement {
         operand.print(tree);
         tree.unindent();
     }
+    
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+    	operand = operand.optimize();
+	}
 
     /**
      * Die Methode generiert den Assembler-Code für diese Anweisung. Sie geht 

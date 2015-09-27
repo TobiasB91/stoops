@@ -32,6 +32,14 @@ public class CallStatement extends Statement {
         call = call.contextAnalysis(declarations);
         call.getType().check(ClassDeclaration.VOID_TYPE, call.getPosition());
     }
+    
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+		call = call.optimize();		
+	}
 
     /**
      * Die Methode gibt diese Anweisung in einer Baumstruktur aus.

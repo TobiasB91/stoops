@@ -87,6 +87,17 @@ public class Program {
     }
     
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    void optimize() {
+    	for(ClassDeclaration cls : classes) {
+    		cls.optimize();
+    	}
+    }
+    
+    
+    /**
      * Die Methode generiert den Assembler-Code für das Programm. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.

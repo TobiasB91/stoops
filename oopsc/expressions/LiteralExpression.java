@@ -33,6 +33,14 @@ public class LiteralExpression extends Expression {
     }
 
     /**
+     * Gibt den Wert des Literals zurück. Wird für die Auswertung konstanter Ausdrücke benötigt.
+     * @return Der  Wert des Literals.
+     */
+    public int getValue() {
+    	return value;
+    }
+    
+    /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck.
      * @param code Der Strom, in den die Ausgabe erfolgt.
      */

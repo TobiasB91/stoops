@@ -67,6 +67,26 @@ public class UnaryExpression extends Expression {
     }
 
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public Expression optimize() {
+    	operand = operand.optimize();
+    	if(operand instanceof LiteralExpression) {
+    		switch (operator) {
+    		case MINUS:	
+    			return new LiteralExpression(-((LiteralExpression)operand).getValue() , ClassDeclaration.INT_TYPE, operand.getPosition());
+    		case NOT:
+    			return new LiteralExpression(((LiteralExpression)operand).getValue() == 1 ? 0 : 1, ClassDeclaration.BOOL_TYPE, operand.getPosition());
+    		
+    		default:
+    			assert false;
+    		}
+    	}
+    	return this;
+	}
+    
+    /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.

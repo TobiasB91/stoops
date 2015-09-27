@@ -302,6 +302,17 @@ public class ClassDeclaration extends Declaration {
     }
 
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+    	for(MethodDeclaration m : methods) {
+    		m.optimize();
+    	}
+    }
+    
+    
+    /**
      * Generiert den Assembler-Code für diese Klasse. Dabei wird davon ausgegangen,
      * dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.

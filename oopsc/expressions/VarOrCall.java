@@ -135,6 +135,20 @@ public class VarOrCall extends Expression {
             tree.unindent();
         }
     }
+    
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     * @return Der optimierte Ausdruck.
+     */
+	public Expression optimize() {
+		if (!args.isEmpty()) {
+			for (int i = 0; i < args.size(); ++i) {
+				args.set(i, args.get(i).optimize());
+			}
+		}
+		return this;
+	}
 
     /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck. Sie geht 

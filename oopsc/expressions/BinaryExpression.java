@@ -116,6 +116,96 @@ public class BinaryExpression extends Expression {
     }
 
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public Expression optimize() {
+    	leftOperand = leftOperand.optimize();
+    	rightOperand = rightOperand.optimize();
+    	if(leftOperand instanceof LiteralExpression && rightOperand instanceof LiteralExpression) {
+    		int leftVal = ((LiteralExpression)leftOperand).getValue();
+    		int rightVal = ((LiteralExpression)rightOperand).getValue();
+    		switch (operator) {
+            case AND: 
+            	return new LiteralExpression(leftVal & rightVal, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case OR:
+            	return new LiteralExpression(leftVal | rightVal, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case PLUS:
+            	return new LiteralExpression(leftVal + rightVal, ClassDeclaration.INT_TYPE ,leftOperand.getPosition());
+            case MINUS:
+            	return new LiteralExpression(leftVal - rightVal, ClassDeclaration.INT_TYPE ,leftOperand.getPosition());
+            case TIMES:
+            	return new LiteralExpression(leftVal * rightVal, ClassDeclaration.INT_TYPE ,leftOperand.getPosition());
+            case DIV:
+            	return new LiteralExpression(leftVal / rightVal, ClassDeclaration.INT_TYPE ,leftOperand.getPosition());
+            case MOD:
+            	return new LiteralExpression(leftVal % rightVal, ClassDeclaration.INT_TYPE ,leftOperand.getPosition());
+            case GT:
+            	return new LiteralExpression(leftVal > rightVal ? 1 : 0, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case GTEQ:
+            	return new LiteralExpression(leftVal >= rightVal ? 1 : 0, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case LT:
+            	return new LiteralExpression(leftVal < rightVal ? 1 : 0, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case LTEQ:
+            	return new LiteralExpression(leftVal <= rightVal ? 1 : 0, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case EQ:
+            	return new LiteralExpression(leftVal == rightVal ? 1 : 0, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case NEQ:
+            	return new LiteralExpression(leftVal != rightVal ? 1 : 0, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            default:
+                assert false;
+            }
+    	} 
+    	
+    	if (leftOperand instanceof LiteralExpression) {
+    		int leftVal = ((LiteralExpression)leftOperand).getValue();
+    		if (leftVal == 0) {
+    			if (operator == Symbol.Id.PLUS) {  /* 0+x -> x */
+    				return rightOperand;
+    			} 
+    			if (operator == Symbol.Id.MINUS) { /* 0-x -> -x */
+    				return new UnaryExpression(operator,rightOperand, rightOperand.getPosition());
+    			}
+    			if (operator == Symbol.Id.OR) { /* FALSE OR x  -> x */ 
+    				return rightOperand;
+    			}
+    		} 
+    		
+    		if (leftVal == 1) { 
+    			if (operator == Symbol.Id.TIMES) { /* 1*x -> x */
+    				return rightOperand;
+    			}
+    			if (operator == Symbol.Id.AND) { /* TRUE AND x  -> x */ 
+    				return rightOperand;
+    			}
+    		}	
+    	}
+    	
+    	if (rightOperand instanceof LiteralExpression) {
+    		int rightVal = ((LiteralExpression)rightOperand).getValue();
+    		if (rightVal == 0) { 
+    			if (operator == Symbol.Id.PLUS) { /* x+0 -> x */
+    				return leftOperand;
+    			} 
+    			if (operator == Symbol.Id.OR) { /* x OR FALSE  -> x */ 
+    				return leftOperand;
+    			}
+    		}
+    		
+    		if (rightVal == 1) {
+    			if (operator == Symbol.Id.TIMES || operator == Symbol.Id.DIV) {  /*  x*1, x/1 -> x */
+    				return leftOperand;
+    			} 
+    			if (operator == Symbol.Id.AND) { /* x AND TRUE  -> x */ 
+    				return leftOperand;
+    			}
+    		}
+    	}
+    	
+    	return this; 
+	}
+    
+    /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.

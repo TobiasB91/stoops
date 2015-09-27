@@ -57,6 +57,15 @@ public class BoxExpression extends Expression {
     }
 
     /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public Expression optimize() {
+    	operand = operand.optimize();
+    	return this;
+	}
+    
+    /**
      * Die Methode generiert den Assembler-Code für diesen Ausdruck. Sie geht 
      * davon aus, dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
      * @param code Der Strom, in den die Ausgabe erfolgt.

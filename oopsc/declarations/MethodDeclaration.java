@@ -1,6 +1,7 @@
 package oopsc.declarations;
 
 import java.util.LinkedList;
+
 import oopsc.CompileException;
 import oopsc.parser.Identifier;
 import oopsc.parser.Position;
@@ -245,6 +246,16 @@ public class MethodDeclaration extends Declaration {
         tree.unindent();
     }
 
+    /**
+     * Durchläuft den Syntaxbaum und wertet konstante Ausdrücke aus 
+     * und wendet ein paar Transformationen an.
+     */
+    public void optimize() {
+    	for(Statement s : statements) {
+    		s.optimize();
+    	}
+    }
+    
     /**
      * Generiert den Assembler-Code für diese Methode. Dabei wird davon ausgegangen,
      * dass die Kontextanalyse vorher erfolgreich abgeschlossen wurde.
