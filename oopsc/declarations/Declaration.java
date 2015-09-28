@@ -2,6 +2,7 @@ package oopsc.declarations;
 
 import oopsc.CompileException;
 import oopsc.parser.Identifier;
+import oopsc.parser.Symbol;
 import oopsc.streams.TreeStream;
 
 /**
@@ -11,12 +12,16 @@ public abstract class Declaration {
     /** Der Name der deklarierten Klasse, Methode oder Variablen. */
     private Identifier identifier;
     
+    /** Zugriffsrecht */
+    private Symbol.Id accessRight;
+    
     /**
      * Konstruktor.
      * @param identifier Der Name der deklarierten Klasse, Methode oder Variablen.
      */
-    public Declaration(Identifier identifier) {
+    public Declaration(Identifier identifier, Symbol.Id accessRight) {
         this.identifier = identifier;
+        this.accessRight = accessRight;
     }
     
     /**
@@ -25,6 +30,14 @@ public abstract class Declaration {
      */
     public Identifier getIdentifier() {
         return identifier;
+    }
+    
+    /**
+     * Liefert das Zugriffsrecht der Deklaration.
+     * @return Das Zugriffsrecht
+     */
+    public Symbol.Id getAccessRight() {
+    	return accessRight;
     }
     
     

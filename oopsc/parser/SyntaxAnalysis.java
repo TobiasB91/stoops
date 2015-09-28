@@ -35,9 +35,9 @@ import oopsc.statements.WriteStatement;
  *                  { memberdecl } 
  *                  END CLASS
  *
- * memberdecl   ::= vardecl ';'
+ * memberdecl   ::= [PRIVATE|PROTECTED|PUBLIC] ( vardecl ';'
  *                | METHOD identifier [ '(' vardecl { ';' vardecl } ')' ]
- *                 [':' Identifier ] IS methodbody
+ *                 [':' Identifier ] IS methodbody )
  * 
  * vardecl      ::= identifier { ',' identifier } ':' identifier
  * 
@@ -194,6 +194,11 @@ public class SyntaxAnalysis {
     private void memberdecl(LinkedList<VarDeclaration> attributes, 
             LinkedList<MethodDeclaration> methods)
             throws CompileException, IOException {
+    	Symbol.Id accessRight = Symbol.Id.PUBLIC;
+    	if(lexer.getSymbol().getId() == Symbol.Id.PRIVATE || lexer.getSymbol().getId() == Symbol.Id.PROTECTED || lexer.getSymbol().getId() == Symbol.Id.PUBLIC) {
+    		accessRight = lexer.getSymbol().getId();
+    		lexer.nextSymbol();
+    	}
         if (lexer.getSymbol().getId() == Symbol.Id.METHOD) {
             lexer.nextSymbol();
             LinkedList<VarDeclaration> params = new LinkedList<VarDeclaration>();
@@ -203,10 +208,10 @@ public class SyntaxAnalysis {
             /** Parse eventuell vorhandene Parameter */
             if (lexer.getSymbol().getId() ==  Symbol.Id.LPAREN) {
             	lexer.nextSymbol();
-            	vardecl(params, false);
+            	vardecl(params, false, Symbol.Id.PUBLIC);
             	while (lexer.getSymbol().getId() == Symbol.Id.SEMICOLON) {
             		lexer.nextSymbol();
-            		vardecl(params, false);
+            		vardecl(params, false, Symbol.Id.PUBLIC);
             	}
             	expectSymbol(Symbol.Id.RPAREN);
             }
@@ -221,9 +226,9 @@ public class SyntaxAnalysis {
             LinkedList<VarDeclaration> vars = new LinkedList<VarDeclaration>();
             LinkedList<Statement> statements = new LinkedList<Statement>();
             Position end = methodbody(vars, statements);
-            methods.add(new MethodDeclaration(name, params, returnIdent, vars, statements, end));
+            methods.add(new MethodDeclaration(name, params, returnIdent, vars, statements, end, accessRight));
         } else {
-            vardecl(attributes, true);
+            vardecl(attributes, true, accessRight);
             expectSymbol(Symbol.Id.SEMICOLON);
         }
     }
@@ -237,7 +242,7 @@ public class SyntaxAnalysis {
      * @throws CompileException Der Quelltext entspricht nicht der Syntax.
      * @throws IOException Ein Lesefehler ist aufgetreten.
      */
-    private void vardecl(LinkedList<VarDeclaration> vars, boolean isAttribute) throws CompileException, IOException {
+    private void vardecl(LinkedList<VarDeclaration> vars, boolean isAttribute, Symbol.Id accessRight) throws CompileException, IOException {
         LinkedList<Identifier> names = new LinkedList<Identifier>();
         names.add(expectIdent());
         while (lexer.getSymbol().getId() == Symbol.Id.COMMA) {
@@ -247,7 +252,7 @@ public class SyntaxAnalysis {
         expectSymbol(Symbol.Id.COLON);
         ResolvableIdentifier ident = expectResolvableIdent();
         for (Identifier name : names) {
-            vars.add(new VarDeclaration(name, ident, isAttribute));
+            vars.add(new VarDeclaration(name, ident, isAttribute, accessRight));
         }
     }
     
@@ -264,7 +269,7 @@ public class SyntaxAnalysis {
     private Position methodbody(LinkedList<VarDeclaration> vars, LinkedList<Statement> statements) 
             throws CompileException, IOException {
         while (lexer.getSymbol().getId() != Symbol.Id.BEGIN) {
-            vardecl(vars, false);
+            vardecl(vars, false, Symbol.Id.PUBLIC);
             expectSymbol(Symbol.Id.SEMICOLON);
         }
         lexer.nextSymbol();

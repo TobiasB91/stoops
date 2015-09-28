@@ -79,7 +79,8 @@ public class VarOrCall extends Expression {
      */
     Expression contextAnalysis(Declarations methodClassScope, Declarations declarations,  boolean addSelf, boolean bindStatic) throws CompileException {
     	this.bindStatic = bindStatic;
-		methodClassScope.resolveVarOrMethod(identifier);
+    	
+		methodClassScope.resolveVarOrMethod(identifier, declarations.getCallerClass());
         for(Expression arg : args) {
         	arg.contextAnalysis(declarations);
         }

@@ -7,6 +7,7 @@ import oopsc.CompileException;
 import oopsc.parser.Identifier;
 import oopsc.parser.Position;
 import oopsc.parser.ResolvableIdentifier;
+import oopsc.parser.Symbol;
 import oopsc.streams.CodeStream;
 import oopsc.streams.TreeStream;
 
@@ -45,8 +46,8 @@ public class ClassDeclaration extends Declaration {
     
     static {
         // Integer und Boolean enthalten ein Element
-    	INT_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Integer", null), true));
-    	BOOL_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Boolean", null), true));
+    	INT_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Integer", null), true, Symbol.Id.PUBLIC));
+    	BOOL_CLASS.attributes.add(new VarDeclaration(new Identifier("_value", null), new ResolvableIdentifier("Boolean", null), true, Symbol.Id.PUBLIC));
     }
 
     /** Die Attribute dieser Klasse. */
@@ -84,7 +85,7 @@ public class ClassDeclaration extends Declaration {
      * @param methods Die Methoden dieser Klasse.
      */
     public ClassDeclaration(Identifier name, ResolvableIdentifier baseType, LinkedList<VarDeclaration> attributes, LinkedList<MethodDeclaration> methods) {
-        super(name);
+        super(name, Symbol.Id.PUBLIC);
         this.attributes = attributes;
         this.methods = methods;
         this.baseType = baseType;
@@ -112,6 +113,14 @@ public class ClassDeclaration extends Declaration {
      */
     public int getObjectSize() {
         return objectSize;
+    }
+    
+    /**
+     * Liefert die Attribute der Klasse zurück
+     * @return Die Attribute der Klasse
+     */
+    public LinkedList<VarDeclaration> getAttributes() {
+    	return attributes;
     }
 
     
@@ -148,7 +157,9 @@ public class ClassDeclaration extends Declaration {
     		
     		
     	}
-    	
+        
+    	// Setze die Klasse aus der die Methoden stammen
+    	declarations.setCallerClass(this); 
     	
     	 // Neuen Deklarationsraum schaffen
         declarations.enter();
@@ -161,6 +172,7 @@ public class ClassDeclaration extends Declaration {
         // Methoden eintragen
         for (MethodDeclaration m : methods) {
             declarations.add(m);
+            
             m.contextAnalysisForParams(declarations);
             m.contextAnalysisForReturnType(declarations);
         }
@@ -168,7 +180,9 @@ public class ClassDeclaration extends Declaration {
         // Wird auf ein Objekt dieser Klasse zugegriffen, werden die Deklarationen
         // in diesem Zustand benötigt. Deshalb werden sie in der Klasse gespeichert.
         this.declarations = (Declarations) declarations.clone();
-        
+
+    	
+    	
         // Deklarationsraum verlassen
         declarations.leave();
         

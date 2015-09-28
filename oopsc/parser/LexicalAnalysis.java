@@ -95,7 +95,10 @@ class LexicalAnalysis {
         keywords.put("RETURN", Symbol.Id.RETURN);
         keywords.put("EXTENDS", Symbol.Id.EXTENDS);
         keywords.put("BASE", Symbol.Id.BASE);
-
+        keywords.put("PRIVATE", Symbol.Id.PRIVATE);
+        keywords.put("PROTECTED", Symbol.Id.PROTECTED);
+        keywords.put("PUBLIC", Symbol.Id.PUBLIC);
+        
         position = new Position(1, 0);
         nextChar();
     }

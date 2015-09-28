@@ -18,7 +18,7 @@ public class Symbol {
         EQ, NEQ, GT, GTEQ, LT, LTEQ, AND, OR, NOT,
         PLUS, MINUS, TIMES, DIV, MOD, 
         BECOMES, NEW,
-        SELF, BASE,
+        SELF, BASE, PRIVATE, PROTECTED, PUBLIC,
         NULL,
         EOF
     };

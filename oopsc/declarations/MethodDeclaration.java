@@ -6,6 +6,7 @@ import oopsc.CompileException;
 import oopsc.parser.Identifier;
 import oopsc.parser.Position;
 import oopsc.parser.ResolvableIdentifier;
+import oopsc.parser.Symbol;
 import oopsc.statements.Statement;
 import oopsc.streams.CodeStream;
 import oopsc.streams.TreeStream;
@@ -48,8 +49,8 @@ public class MethodDeclaration extends Declaration {
      * @param endPosition Die Quelltextposition des Methodenendes.
      */
     public MethodDeclaration(Identifier name, LinkedList<VarDeclaration> params, ResolvableIdentifier returnType, LinkedList<VarDeclaration> vars, LinkedList<Statement> statements,
-            Position endPosition) {
-        super(name);
+            Position endPosition, Symbol.Id accessRight) {
+        super(name, accessRight);
         this.vars = vars;
         this.statements = statements;
         this.endPosition = endPosition;
@@ -67,9 +68,9 @@ public class MethodDeclaration extends Declaration {
         		throw new CompileException("Hier darf kein Wert zurückgeliefert werden", getIdentifier().getPosition());
         	}
     		
-    		result = new VarDeclaration(new Identifier("_result", null), returnType , false);
+    		result = new VarDeclaration(new Identifier("_result", null), returnType , false, Symbol.Id.PUBLIC);
     	} else {
-    		result = new VarDeclaration(new Identifier("_result", null), new ResolvableIdentifier("Void", null), false);
+    		result = new VarDeclaration(new Identifier("_result", null), new ResolvableIdentifier("Void", null), false, Symbol.Id.PUBLIC);
     		result.getType().setDeclaration(ClassDeclaration.VOID_TYPE);
     	}
     }
@@ -84,7 +85,7 @@ public class MethodDeclaration extends Declaration {
         
         // SELF ist Variable vom Typ dieser Klasse
         self = new VarDeclaration(new Identifier("_self", null), 
-                new ResolvableIdentifier(selfType.getIdentifier().getName(), null), false);
+                new ResolvableIdentifier(selfType.getIdentifier().getName(), null), false, Symbol.Id.PUBLIC);
         self.getType().setDeclaration(selfType);
     }
     
@@ -98,7 +99,7 @@ public class MethodDeclaration extends Declaration {
         
         if (selfType.getBaseType() != null) {
         	base = new VarDeclaration(new Identifier("_base", null), 
-        			new ResolvableIdentifier(((ClassDeclaration) selfType.getBaseType().getDeclaration()).getIdentifier().getName(), null), false);
+        			new ResolvableIdentifier(((ClassDeclaration) selfType.getBaseType().getDeclaration()).getIdentifier().getName(), null), false, Symbol.Id.PUBLIC);
         	base.getType().setDeclaration(((ClassDeclaration) selfType.getBaseType().getDeclaration()));
         }
     }
@@ -215,7 +216,7 @@ public class MethodDeclaration extends Declaration {
      * @param tree Der Strom, in den die Ausgabe erfolgt.
      */
     void print(TreeStream tree) {
-        tree.println("METHOD " + getIdentifier().getName());
+        tree.println(getAccessRight().toString() + " " + "METHOD " + getIdentifier().getName());
         tree.indent();
         if (!params.isEmpty()) {
             tree.println("PARAMS");
@@ -308,12 +309,17 @@ public class MethodDeclaration extends Declaration {
 	 * Gibt zurück, ob die Signatur beider Methoden übereinstimmen.
 	 * @param method Die andere Methode
 	 * @return Ob die Signaturen der beiden Methoden übereinstimmen
-	 * @throws CompileException Eine Überladung findet statt - nichts unterstützt
+	 * @throws CompileException Eine Überladung findet statt, die nicht unterstützt wird
 	 */
 	public boolean is(MethodDeclaration method) throws CompileException {
 		if(!getIdentifier().getName().equals(method.getIdentifier().getName())) {
 			return false;
 		}
+		
+		if ((getAccessRight() ==  Symbol.Id.PUBLIC && method.getAccessRight() != Symbol.Id.PUBLIC) || 
+				(getAccessRight() == Symbol.Id.PROTECTED && method.getAccessRight() == Symbol.Id.PRIVATE) ) {
+			throw new CompileException("Unerlaubte Überladung", method.getIdentifier().getPosition());
+		} 
 		
 		if(params.size() != method.getParams().size()) {
 			throw new CompileException("Unerlaubte Überladung", method.getIdentifier().getPosition());

@@ -37,7 +37,7 @@ public class ReturnStatement extends Statement {
 		if (returnExpression != null) {
 			
 			ResolvableIdentifier result = new ResolvableIdentifier("_result", returnExpression.getPosition());
-			declarations.resolveVarOrMethod(result);
+			declarations.resolveVarOrMethod(result, declarations.getCallerClass());
 			
 			if(ClassDeclaration.VOID_TYPE.isA(((ClassDeclaration)((VarDeclaration)result.getDeclaration()).getType().getDeclaration()))) {
 				throw new CompileException("Hier darf kein Wert zurückgeliefert werden", returnExpression.getPosition());
@@ -54,7 +54,7 @@ public class ReturnStatement extends Statement {
 		} else {
 		
  			ResolvableIdentifier result = new ResolvableIdentifier("_result", null);
-			declarations.resolveVarOrMethod(result);
+			declarations.resolveVarOrMethod(result, declarations.getCallerClass());
 			
 			if ( !ClassDeclaration.VOID_TYPE.isA( ((ClassDeclaration)((VarDeclaration)result.getDeclaration()).getType().getDeclaration())) ) {
 				throw new CompileException("Rückgabewert erwartet", position);

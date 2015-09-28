@@ -54,6 +54,7 @@ public class AccessExpression extends Expression {
         // schreiben, wenn Integer Methoden hätte.
         leftOperand = leftOperand.box(declarations);
 
+        
         // Der rechte Operand hat einen Deklarationsraum, der sich aus dem 
         // Ergebnistyp des linken Operanden ergibt.
         rightOperand.contextAnalysis(leftOperand.getType().getDeclarations(), declarations, false, isBase);

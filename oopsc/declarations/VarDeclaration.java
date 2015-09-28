@@ -3,6 +3,7 @@ package oopsc.declarations;
 import oopsc.CompileException;
 import oopsc.parser.Identifier;
 import oopsc.parser.ResolvableIdentifier;
+import oopsc.parser.Symbol;
 import oopsc.streams.TreeStream;
 
 /**
@@ -28,8 +29,8 @@ public class VarDeclaration extends Declaration {
      * @param attribute Wird hier ein Attribut deklariert (statt einer lokalen
      *         Variablen)?
      */
-    public VarDeclaration(Identifier name, ResolvableIdentifier type, boolean attribute) {
-        super(name);
+    public VarDeclaration(Identifier name, ResolvableIdentifier type, boolean attribute, Symbol.Id accessRight) {
+        super(name, accessRight);
         this.type = type;
         this.attribute = attribute;
     }
@@ -82,7 +83,7 @@ public class VarDeclaration extends Declaration {
      * @param tree Der Strom, in den die Ausgabe erfolgt.
      */
     void print(TreeStream tree) {
-        tree.println(getIdentifier().getName() + 
+        tree.println(isAttribute() ? getAccessRight().toString() + " " : "" +  getIdentifier().getName() + 
                 (type.getDeclaration() == null ? "" : " (" + offset + ")") +
                 " : " + type.getName());
     }
