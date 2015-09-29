@@ -15,7 +15,7 @@ public class Symbol {
         WHILE, DO,
         COLON, SEMICOLON, COMMA, PERIOD,
         LPAREN, RPAREN,
-        EQ, NEQ, GT, GTEQ, LT, LTEQ, AND, OR, NOT,
+        EQ, NEQ, GT, GTEQ, LT, LTEQ, AND, OR, NOT, AND_THEN, OR_ELSE,
         PLUS, MINUS, TIMES, DIV, MOD, 
         BECOMES, NEW,
         SELF, BASE, PRIVATE, PROTECTED, PUBLIC,

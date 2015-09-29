@@ -44,6 +44,8 @@ public class BinaryExpression extends Expression {
         leftOperand = leftOperand.contextAnalysis(declarations);
         rightOperand = rightOperand.contextAnalysis(declarations);
         switch (operator) {
+        case AND_THEN:
+        case OR_ELSE:
         case AND: 
         case OR:
         	leftOperand = leftOperand.unBox();
@@ -126,8 +128,10 @@ public class BinaryExpression extends Expression {
     		int leftVal = ((LiteralExpression)leftOperand).getValue();
     		int rightVal = ((LiteralExpression)rightOperand).getValue();
     		switch (operator) {
+    		case AND_THEN:
             case AND: 
             	return new LiteralExpression(leftVal & rightVal, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
+            case OR_ELSE:
             case OR:
             	return new LiteralExpression(leftVal | rightVal, ClassDeclaration.BOOL_TYPE ,leftOperand.getPosition());
             case PLUS:
@@ -212,7 +216,22 @@ public class BinaryExpression extends Expression {
      */
     public void generateCode(CodeStream code) {
         leftOperand.generateCode(code);
-        rightOperand.generateCode(code);
+        String scLabel = code.nextLabel();
+        switch (operator) {
+        case AND_THEN: 
+        	code.println("MRM R6, (R2)");
+        	code.println("ISZ R7, R6");
+        	code.println("JPC R7, " + scLabel);
+        	break;
+        case OR_ELSE:
+        	code.println("MRM R6, (R2)");
+        	code.println("ISP R7, R6");
+        	code.println("JPC R7, " + scLabel);
+        	break;
+        default:
+        	break;
+        }
+        rightOperand.generateCode(code);       
         code.println("; " + operator);
         code.println("MRM R5, (R2)");
         code.println("SUB R2, R1");
@@ -260,15 +279,18 @@ public class BinaryExpression extends Expression {
             code.println("ISZ R6, R6");
             code.println("XOR R6, R1");
             break;
+        case OR_ELSE:
         case OR:
         	code.println("OR R6, R5");
         	break;
+        case AND_THEN:
         case AND:
         	code.println("AND R6, R5");
         	break;
         default:
             assert false;
         }
+        code.println(scLabel + ":");
         code.println("MMR (R2), R6");
     }
 }

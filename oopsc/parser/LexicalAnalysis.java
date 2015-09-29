@@ -4,7 +4,10 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.PushbackReader;
+import java.util.Arrays;
 import java.util.HashMap;
+
 import oopsc.CompileException;
 
 /**
@@ -31,7 +34,7 @@ class LexicalAnalysis {
     private HashMap<String, Symbol.Id> keywords;
 
     /** Der Datenstrom, aus dem der Quelltext gelesen wird. */
-    private InputStreamReader reader;
+    private PushbackReader reader;
 
     /** Sollen die erkannten Symbole auf der Konsole ausgegeben werden? */
     private boolean printSymbols;
@@ -39,11 +42,16 @@ class LexicalAnalysis {
     /** Die aktuelle Position im Quelltext. */
     private Position position;
     
+    private Position offset; 
+    
     /** Das zuletzt gelesene Zeichen. */
     private int c;
     
     /** Das zuletzt erkannte Symbol. */
     private Symbol symbol;
+    
+    /** Das zuvor erkannte Symbol. */
+    private Symbol previousSymbol;
 
     /** 
      * Die Methode liest das nächste Zeichen aus dem Quelltext.
@@ -52,6 +60,11 @@ class LexicalAnalysis {
      */
     private void nextChar() throws IOException {
         position.next((char) c);
+        c = reader.read();
+    }
+    
+    private void nextTmpChar() throws IOException {
+        offset.next((char) c);
         c = reader.read();
     }
     
@@ -65,8 +78,7 @@ class LexicalAnalysis {
      */
     LexicalAnalysis(String fileName, boolean printSymbols) 
             throws FileNotFoundException, IOException {
-        FileInputStream stream = new FileInputStream(fileName);
-        reader = new InputStreamReader(stream, "UTF-8");
+        reader = new PushbackReader(new InputStreamReader(new FileInputStream(fileName),"UTF-8"), 5);
         this.printSymbols = printSymbols;
 
         keywords = new HashMap<String, Symbol.Id>();
@@ -98,8 +110,11 @@ class LexicalAnalysis {
         keywords.put("PRIVATE", Symbol.Id.PRIVATE);
         keywords.put("PROTECTED", Symbol.Id.PROTECTED);
         keywords.put("PUBLIC", Symbol.Id.PUBLIC);
+        keywords.put("AND THEN", Symbol.Id.AND_THEN);
+        keywords.put("OR ELSE", Symbol.Id.OR_ELSE);
         
         position = new Position(1, 0);
+        offset = new Position(0, 0);
         nextChar();
     }
     
@@ -110,6 +125,7 @@ class LexicalAnalysis {
      * @throws IOException Ein Lesefehler ist aufgetreten.
      */
     void nextSymbol() throws CompileException, IOException {
+    	previousSymbol = symbol;
         for(;;) {
             // Leerraum ignorieren
             while (c != -1 && Character.isWhitespace((char) c)) {
@@ -241,7 +257,8 @@ class LexicalAnalysis {
             nextChar();
             break;
         default:
-            pos = new Position(position.getLine(), position.getColumn());
+            pos = new Position(position.getLine() + offset.getLine(), position.getColumn() + offset.getColumn());
+            offset = new Position(0, 0);
             if (Character.isDigit((char) c)) {
                 int number = c - '0';
                 nextChar();
@@ -257,6 +274,44 @@ class LexicalAnalysis {
                     ident = ident + (char) c;
                     nextChar();
                 }
+                
+                if ("AND".equals(ident) || "OR".equals(ident)) {
+                	char[] tmp = new char[5];
+                	while (c != -1 && Character.isWhitespace(c)) {
+                		nextTmpChar();
+                	}
+                	if ("AND".equals(ident)) {
+	                	for (int i=0; c != -1 && i < 5; ++i) {
+	                		tmp[i] = (char)c;
+	                		if (i != 4) { 
+	                			nextTmpChar();
+	                		}
+	                	}
+                		if ("THEN".equals(new String(Arrays.copyOfRange(tmp, 0, 4))) &&  Character.isWhitespace(tmp[4])) {
+                			ident = "AND THEN";
+                		} else {
+                			reader.unread(tmp);
+                			nextChar();
+                			offset = new Position(0,0);
+                		}
+                	} else {
+                		for (int i = 0; c != -1 && i < 5; ++i) {
+	                		tmp[i] = (char)c;   
+	                		if (i != 4) { 
+	                			nextTmpChar();
+	                		}
+	                	}
+                		if ("ELSE".equals(new String(Arrays.copyOfRange(tmp, 0, 4))) &&  Character.isWhitespace(tmp[4])) {
+                			ident = "OR ELSE";
+                		} else {
+                			reader.unread(tmp);
+                			nextChar();
+                			offset = new Position(0,0);
+                		}
+                	}
+                	
+                }
+                
                 Symbol.Id id = keywords.get(ident);
                 if (id != null) {
                     symbol = new Symbol(id, pos);
@@ -279,5 +334,14 @@ class LexicalAnalysis {
      */
     public Symbol getSymbol() {
         return symbol;
+    }
+    
+    /**
+     * Gibt das zuvor gelesene Symbol zurück.
+     * Zuvor muss {@link #nextSymbol() nextSymbol} 2 mal aufgerufen worden sein.
+     * @return Das vorherige Symbol.
+     */
+    public Symbol getPreviousSymbol() {
+        return previousSymbol;
     }
 }

@@ -20,6 +20,7 @@ public class Position {
         this.column = column;
     }
     
+    
     /**
      * Liefert die Quelltextzeile.
      */

@@ -49,19 +49,22 @@ import oopsc.statements.WriteStatement;
  * 
  * statement    ::= READ memberaccess ';'
  *                | WRITE expression ';'
- *                | IF predicate 
+ *                | IF predicateSC 
  *                  THEN statements 
- *                  {ELSEIF predicate THEN statements }
+ *                  {ELSEIF predicateSC THEN statements }
  *                  [ELSE statements]
  *                  END IF
- *                | WHILE predicate 
+ *                | WHILE predicateSC 
  *                  DO statements 
  *                  END WHILE
- *                | memberaccess [ ':=' predicate ] ';'
- *                | RETURN [ predicate ] ';'
+ *                | memberaccess [ ':=' predicateSC ] ';'
+ *                | RETURN [ predicateSC ] ';'
  * 
+ * predicateSC ::= conjuctionSC { OR ELSE conjunctionSC }
  * 
- * predicate ::= conjunction { OR conjunction}
+ * conjunctionSC ::= predicate { AND THEN predicate }
+ * 
+ * predicate ::= conjunction { OR conjunction }
  * 
  * conjunction ::= relation { AND relation }
  * 
@@ -82,12 +85,12 @@ import oopsc.statements.WriteStatement;
  *                | NULL
  *                | SELF
  *                | NEW identifier
- *                | '(' predicate ')'
+ *                | '(' predicateSC ')'
  *                | varorcall
  *                | TRUE 
  *                | FALSE
  * 
- * varorcall    ::= identifier [ '(' predicate { ',' predicate } ')' ]
+ * varorcall    ::= identifier [ '(' predicateSC { ',' predicateSC } ')' ]
  * </pre>
  * Daraus wird der Syntaxbaum aufgebaut, dessen Wurzel die Klasse
  * {@link Program Program} ist.
@@ -316,7 +319,7 @@ public class SyntaxAnalysis {
         case IF: 
     		boolean isIf = lexer.getSymbol().getId() == Symbol.Id.IF;
         	lexer.nextSymbol();
-            Expression ifCondition = predicate();
+            Expression ifCondition = predicateSC();
             expectSymbol(Symbol.Id.THEN);
             LinkedList<Statement> thenStatements = new LinkedList<Statement>();
             LinkedList<Statement> elseStatements = new LinkedList<Statement>();
@@ -335,7 +338,7 @@ public class SyntaxAnalysis {
             break;	
         case WHILE:
             lexer.nextSymbol();
-            Expression whileCondition = predicate();
+            Expression whileCondition = predicateSC();
             expectSymbol(Symbol.Id.DO);
             LinkedList<Statement> whileStatements = new LinkedList<Statement>();
             statements(whileStatements);
@@ -351,7 +354,7 @@ public class SyntaxAnalysis {
         		statements.add(stmt);
         		lexer.nextSymbol();
         	} else {
-        		stmt = new ReturnStatement(predicate(), lexer.getSymbol().getPosition());
+        		stmt = new ReturnStatement(predicateSC(), lexer.getSymbol().getPosition());
         		statements.add(stmt);
         		expectSymbol(Symbol.Id.SEMICOLON);
         	}
@@ -360,7 +363,7 @@ public class SyntaxAnalysis {
             Expression e = memberAccess();
             if (lexer.getSymbol().getId() == Symbol.Id.BECOMES) {
                 lexer.nextSymbol();
-                statements.add(new Assignment(e, predicate()));
+                statements.add(new Assignment(e, predicateSC()));
             } else {
                 statements.add(new CallStatement(e));
             }
@@ -393,6 +396,40 @@ public class SyntaxAnalysis {
     }
     
     /**
+     * Die Methode parsiert eine Kurzschlussdisjunktion entsprechend der oben angegebenen 
+     * Syntax und liefert den Ausdruck zurück.
+     * @return Der Ausdruck.
+     * @throws CompileException Der Quelltext entspricht nicht der Syntax.
+     * @throws IOException Ein Lesefehler ist aufgetreten.
+     */
+    private Expression predicateSC() throws CompileException, IOException {
+    	Expression e = conjunctionSC();
+    	while (lexer.getSymbol().getId() == Symbol.Id.OR) {
+    		Symbol.Id operator = lexer.getSymbol().getId();
+    		lexer.nextSymbol();
+    		e = new BinaryExpression(e, operator, conjunctionSC());
+    	}
+    	return e;
+    }
+    
+    /**
+     * Die Methode parsiert eine Kurzschlusskonjunktion entsprechend der oben angegebenen 
+     * Syntax und liefert den Ausdruck zurück.
+     * @return Der Ausdruck.
+     * @throws CompileException Der Quelltext entspricht nicht der Syntax.
+     * @throws IOException Ein Lesefehler ist aufgetreten.
+     */
+    private Expression conjunctionSC() throws CompileException, IOException {
+    	Expression e = predicate();
+    	while (lexer.getSymbol().getId() == Symbol.Id.AND_THEN) {
+    		Symbol.Id operator = lexer.getSymbol().getId();
+    		lexer.nextSymbol();
+    		e = new BinaryExpression(e, operator, predicate());
+    	}
+    	return e;
+    }
+    
+    /**
      * Die Methode parsiert ein Prädikat entsprechend der oben angegebenen 
      * Syntax und liefert den Ausdruck zurück.
      * @return Der Ausdruck.
@@ -401,7 +438,7 @@ public class SyntaxAnalysis {
      */
     private Expression predicate() throws CompileException, IOException {
     	Expression e = conjunction();
-    	while (lexer.getSymbol().getId() == Symbol.Id.OR) {
+    	while (lexer.getSymbol().getId() == Symbol.Id.OR_ELSE) {
     		Symbol.Id operator = lexer.getSymbol().getId();
     		lexer.nextSymbol();
     		e = new BinaryExpression(e, operator, conjunction());
@@ -544,7 +581,7 @@ public class SyntaxAnalysis {
             break;
         case LPAREN:
             lexer.nextSymbol();
-            e = predicate();
+            e = predicateSC();
             expectSymbol(Symbol.Id.RPAREN);
             break;
         case IDENT:
@@ -569,10 +606,10 @@ public class SyntaxAnalysis {
     	LinkedList<Expression> args = new LinkedList<Expression>();
         if (lexer.getSymbol().getId() ==  Symbol.Id.LPAREN) {
         	lexer.nextSymbol();
-        	args.add(predicate());
+        	args.add(predicateSC());
         	while (lexer.getSymbol().getId() == Symbol.Id.COMMA) {
         		lexer.nextSymbol();
-        		args.add(predicate());
+        		args.add(predicateSC());
         	}
         	expectSymbol(Symbol.Id.RPAREN);
         }
